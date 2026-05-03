@@ -666,6 +666,7 @@
           <div class="header-btns">
             <button id="headerNewDealBtn" class="good" style="display:none">New Deal</button>
             <button id="headerBackLobbyBtn" class="secondary" style="display:none">Back to Lobby</button>
+            <button id="headerResetDbBtn" class="bad" style="display:none">Reset DB</button>
             <button id="copyCodeBtn">Copy Code</button>
             <button id="leaveBtn" class="secondary">Leave</button>
           </div>
@@ -933,6 +934,7 @@
     el("closeShowdownBtn").addEventListener("click", () => closeModal("showdownModal"));
     el("headerNewDealBtn").addEventListener("click", headerNewDeal);
     el("headerBackLobbyBtn").addEventListener("click", headerBackToLobby);
+    el("headerResetDbBtn").addEventListener("click", headerResetDb);
     el("autoArrangeBtn").addEventListener("click", autoArrangeMySeat);
     el("clearLayoutBtn").addEventListener("click", clearMyLayout);
     el("submitHandBtn").addEventListener("click", submitHand);
@@ -1074,6 +1076,7 @@
       me = null;
       el("headerNewDealBtn").style.display = "none";
       el("headerBackLobbyBtn").style.display = "none";
+      el("headerResetDbBtn").style.display = "none";
     }
 
     function copyCode() {
@@ -1110,10 +1113,12 @@
     function updateHeaderControls() {
       const newDealBtn = el("headerNewDealBtn");
       const backLobbyBtn = el("headerBackLobbyBtn");
+      const resetDbBtn = el("headerResetDbBtn");
 
       if (!state || !me || me.seat !== "banker") {
         newDealBtn.style.display = "none";
         backLobbyBtn.style.display = "none";
+        resetDbBtn.style.display = "none";
         return;
       }
 
@@ -1122,6 +1127,7 @@
       newDealBtn.textContent = state.status === "lobby" ? "Start Deal" : "New Deal";
 
       backLobbyBtn.style.display = state.status !== "lobby" ? "inline-flex" : "none";
+      resetDbBtn.style.display = "inline-flex";
     }
 
     async function headerNewDeal() {
@@ -1168,6 +1174,35 @@
       await refreshState();
     }
 
+
+
+    async function headerResetDb() {
+      if (!state || !me) return;
+
+      if (me.seat !== "banker") {
+        alert("Only the banker can reset the room database.");
+        return;
+      }
+
+      const ok = confirm(
+        "Reset this room database?\n\nThis will clear Player 1 / Player 2 / Player 3 seats, clear all cards, and return the room to lobby.\n\nThe banker stays in the room."
+      );
+
+      if (!ok) return;
+
+      closeModal("arrangeModal");
+      closeModal("showdownModal");
+
+      await callRpc("clear_pusoy_room_seats", {
+        p_room_code: me.roomCode,
+        p_player_token: me.token
+      });
+
+      selectedCardId = null;
+      await refreshState();
+
+      alert("Room reset. Player seats are now clear.");
+    }
 
     function renderMainArrangeBoard() {}
 
