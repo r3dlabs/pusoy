@@ -245,8 +245,16 @@
     }
 
     .mini-card.back {
-      background: linear-gradient(135deg, #1e3a8a, #111827);
+      background:
+        radial-gradient(circle at center, rgba(255,255,255,0.12) 0 18%, transparent 19%),
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.08) 0 2px, transparent 2px 6px),
+        repeating-linear-gradient(-45deg, rgba(255,255,255,0.06) 0 2px, transparent 2px 6px),
+        linear-gradient(135deg, #1f3b7a, #0f172a);
       border: 1px solid rgba(255,255,255,0.22);
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.09),
+        inset 0 0 0 4px rgba(0,0,0,0.15),
+        0 5px 10px rgba(0,0,0,0.2);
     }
 
     .inline-hand {
@@ -261,6 +269,7 @@
       border: 1px solid rgba(255,255,255,0.13);
       border-radius: 12px;
       padding: 8px;
+      width: 100%;
     }
 
     .inline-row-title {
@@ -915,7 +924,7 @@
       card.classList.toggle("empty", !player);
       card.classList.toggle("ready", !!player?.submitted);
       card.classList.toggle("me", me.seat === seat);
-      card.classList.toggle("revealed", state.status === "showdown" && !!state.showdown_hands?.[seat]);
+      card.classList.toggle("revealed", hasLargeSeatView(seat));
 
       const title = card.querySelector(".seat-title");
       const sub = card.querySelector(".seat-sub");
@@ -933,7 +942,6 @@
         return;
       }
 
-      // The chosen name becomes the main label on the card.
       title.textContent = player.name;
 
       if (state.status === "showdown" && state.showdown_hands?.[seat]) {
@@ -942,19 +950,30 @@
           <div><strong>${seatNames[seat]}</strong></div>
           ${inlineRevealHand(hand)}
         `;
-      } else if (state.status === "arranging") {
-        sub.innerHTML = `
-          <div><strong>${seatNames[seat]}</strong> · ${player.submitted ? "Ready" : (seat === me.seat ? "Click to arrange" : "Arranging")}</div>
-          ${miniBacks(13)}
-        `;
-      } else if (state.status === "waiting") {
-        sub.innerHTML = `
-          <div><strong>${seatNames[seat]}</strong> · ${player.submitted ? "Ready" : "Waiting"}</div>
-          ${miniBacks(13)}
-        `;
-      } else {
-        sub.innerHTML = seatNames[seat];
+        return;
       }
+
+      if (state.status === "arranging" || state.status === "waiting") {
+        if (seat === me.seat) {
+          const hand = getPreviewHandForSeatOwner();
+          const helperText = state.status === "arranging"
+            ? `<strong>${seatNames[seat]}</strong> · ${player.submitted ? "Ready" : "Click to arrange"}`
+            : `<strong>${seatNames[seat]}</strong> · ${player.submitted ? "Ready" : "Waiting"}`;
+
+          sub.innerHTML = `
+            <div>${helperText}</div>
+            ${inlineRevealHand(hand, true)}
+          `;
+        } else {
+          sub.innerHTML = `
+            <div><strong>${seatNames[seat]}</strong> · ${player.submitted ? "Ready" : "Hidden"}</div>
+            ${inlineFaceDownLayout()}
+          `;
+        }
+        return;
+      }
+
+      sub.innerHTML = seatNames[seat];
     }
 
     function renderScoringCard() {
@@ -1287,6 +1306,64 @@
       }
     }
 
+
+    function hasLargeSeatView(seat) {
+      if (!state) return false;
+      if (state.status === "showdown" && !!state.showdown_hands?.[seat]) return true;
+      if ((state.status === "arranging" || state.status === "waiting") && !!state.players?.[seat]) return true;
+      return false;
+    }
+
+    function getPreviewHandForSeatOwner() {
+      const hand = getMyHandForArrange();
+
+      // If already fully arranged, show the actual layout.
+      if (hand.top.length === 3 && hand.middle.length === 5 && hand.bottom.length === 5) {
+        return hand;
+      }
+
+      // Otherwise build a preview layout from current cards so the seat card still looks like the showdown layout.
+      const all = [...hand.top, ...hand.middle, ...hand.bottom, ...hand.pool];
+      const preview = autoArrange(all);
+
+      // Preserve already placed cards when possible by placing them first if the row isn't complete.
+      if (hand.top.length > 0 && hand.top.length <= 3) {
+        const remainder = preview.top.filter(p => !hand.top.some(c => c.id === p.id));
+        preview.top = [...hand.top, ...remainder].slice(0, 3);
+      }
+
+      if (hand.middle.length > 0 && hand.middle.length <= 5) {
+        const remainder = preview.middle.filter(p => !hand.middle.some(c => c.id === p.id));
+        preview.middle = [...hand.middle, ...remainder].slice(0, 5);
+      }
+
+      if (hand.bottom.length > 0 && hand.bottom.length <= 5) {
+        const remainder = preview.bottom.filter(p => !hand.bottom.some(c => c.id === p.id));
+        preview.bottom = [...hand.bottom, ...remainder].slice(0, 5);
+      }
+
+      return preview;
+    }
+
+    function inlineFaceDownLayout() {
+      return `
+        <div class="inline-hand">
+          <div class="inline-row">
+            <div class="inline-row-title"><span>Top</span><span>Hidden</span></div>
+            ${miniBacks(3)}
+          </div>
+          <div class="inline-row">
+            <div class="inline-row-title"><span>Middle</span><span>Hidden</span></div>
+            ${miniBacks(5)}
+          </div>
+          <div class="inline-row">
+            <div class="inline-row-title"><span>Bottom</span><span>Hidden</span></div>
+            ${miniBacks(5)}
+          </div>
+        </div>
+      `;
+    }
+
     function miniBacks(count) {
       return `<div class="mini-backs">${Array.from({ length: count }).map(() => `<span class="mini-card back"></span>`).join("")}</div>`;
     }
@@ -1299,19 +1376,23 @@
       return `<div class="mini-cards">${sortCards(cards).map(miniCardHtml).join("")}</div>`;
     }
 
-    function inlineRevealHand(hand) {
+    function inlineRevealHand(hand, previewMode = false) {
+      const topName = hand.top.length === 3 ? evaluate3(hand.top).name : (previewMode ? "Preview" : "");
+      const middleName = hand.middle.length === 5 ? evaluate5(hand.middle).name : (previewMode ? "Preview" : "");
+      const bottomName = hand.bottom.length === 5 ? evaluate5(hand.bottom).name : (previewMode ? "Preview" : "");
+
       return `
         <div class="inline-hand">
           <div class="inline-row">
-            <div class="inline-row-title"><span>Top</span><span>${evaluate3(hand.top).name}</span></div>
+            <div class="inline-row-title"><span>Top</span><span>${topName}</span></div>
             ${miniCards(hand.top)}
           </div>
           <div class="inline-row">
-            <div class="inline-row-title"><span>Middle</span><span>${evaluate5(hand.middle).name}</span></div>
+            <div class="inline-row-title"><span>Middle</span><span>${middleName}</span></div>
             ${miniCards(hand.middle)}
           </div>
           <div class="inline-row">
-            <div class="inline-row-title"><span>Bottom</span><span>${evaluate5(hand.bottom).name}</span></div>
+            <div class="inline-row-title"><span>Bottom</span><span>${bottomName}</span></div>
             ${miniCards(hand.bottom)}
           </div>
         </div>
