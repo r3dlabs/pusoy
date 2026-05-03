@@ -68,6 +68,21 @@
       align-items: center;
       gap: 12px;
       padding: 10px 0 18px;
+      flex-wrap: wrap;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .header-actions button {
+      padding: 9px 13px;
+      border-radius: 999px;
+      font-size: 13px;
     }
     .brand { display: flex; flex-direction: column; gap: 4px; }
     .brand h1 { margin: 0; font-size: clamp(24px, 4vw, 38px); letter-spacing: -0.04em; }
@@ -384,7 +399,11 @@
         <h1>Pusoy Private Room</h1>
         <span>Online SPA: 1 banker vs 3 players</span>
       </div>
-      <div class="pill" id="modePill">Supabase online mode</div>
+      <div class="header-actions">
+        <button id="headerNewDealBtn" class="good" style="display:none">New Deal</button>
+        <button id="headerBackLobbyBtn" class="secondary" style="display:none">Back to Lobby</button>
+        <div class="pill" id="modePill">Supabase online mode</div>
+      </div>
     </div>
 
     <section id="homeScreen" class="screen active">
@@ -604,6 +623,8 @@
     el("leaveBtn").addEventListener("click", leaveRoom);
     el("closeArrangeBtn").addEventListener("click", () => closeModal("arrangeModal"));
     el("closeShowdownBtn").addEventListener("click", () => closeModal("showdownModal"));
+    el("headerNewDealBtn").addEventListener("click", headerNewDeal);
+    el("headerBackLobbyBtn").addEventListener("click", headerBackToLobby);
     el("autoArrangeBtn").addEventListener("click", autoArrangeMySeat);
     el("clearLayoutBtn").addEventListener("click", clearMyLayout);
     el("submitHandBtn").addEventListener("click", submitHand);
@@ -733,11 +754,75 @@
       screens.home.classList.add("active");
       state = null;
       me = null;
+      el("headerNewDealBtn").style.display = "none";
+      el("headerBackLobbyBtn").style.display = "none";
     }
 
     function copyCode() {
       navigator.clipboard?.writeText(me.roomCode);
       el("roomMessage").textContent = "Room code copied.";
+    }
+
+
+    function updateHeaderControls() {
+      const newDealBtn = el("headerNewDealBtn");
+      const backLobbyBtn = el("headerBackLobbyBtn");
+
+      if (!state || !me || me.seat !== "banker") {
+        newDealBtn.style.display = "none";
+        backLobbyBtn.style.display = "none";
+        return;
+      }
+
+      const canNewDeal = ["lobby", "waiting", "showdown"].includes(state.status);
+      newDealBtn.style.display = canNewDeal ? "inline-flex" : "none";
+      newDealBtn.textContent = state.status === "lobby" ? "Start Deal" : "New Deal";
+
+      backLobbyBtn.style.display = state.status !== "lobby" ? "inline-flex" : "none";
+    }
+
+    async function headerNewDeal() {
+      if (!state || !me) return;
+
+      if (me.seat !== "banker") {
+        alert("Only the banker can start a new deal.");
+        return;
+      }
+
+      if (state.status === "arranging") {
+        alert("A round is already in progress.");
+        return;
+      }
+
+      const joined = getJoinedSeats();
+      if (joined.length < 2) {
+        alert("At least banker and one player should join first.");
+        return;
+      }
+
+      await startRound();
+    }
+
+    async function headerBackToLobby() {
+      if (!state || !me) return;
+
+      if (me.seat !== "banker") {
+        alert("Only the banker can reset the lobby.");
+        return;
+      }
+
+      const ok = confirm("Reset back to lobby and clear current cards?");
+      if (!ok) return;
+
+      closeModal("arrangeModal");
+      closeModal("showdownModal");
+
+      await callRpc("reset_pusoy_lobby", {
+        p_room_code: me.roomCode,
+        p_player_token: me.token
+      });
+
+      await refreshState();
     }
 
     function renderRoom() {
@@ -749,6 +834,7 @@
 
       seatOrder.forEach(seat => renderSeat(seat));
       renderScoringCard();
+      updateHeaderControls();
 
       const joined = getJoinedSeats();
       const submittedCount = joined.filter(s => state.players?.[s]?.submitted).length;
