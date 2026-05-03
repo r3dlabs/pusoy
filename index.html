@@ -156,6 +156,87 @@
     .seat-card.ready .seat-badge { background: rgba(22,163,74,0.25); color: #bbf7d0; }
     .seat-card.empty { opacity: 0.56; }
     .seat-card.me { outline: 4px solid rgba(37,99,235,0.38); }
+
+    .seat-card.revealed {
+      min-height: 330px;
+      justify-content: flex-start;
+      align-items: stretch;
+      text-align: left;
+    }
+
+    .mini-backs,
+    .mini-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      justify-content: center;
+      margin-top: 12px;
+    }
+
+    .mini-card {
+      width: 27px;
+      height: 38px;
+      border-radius: 7px;
+      background: #fff;
+      color: #111827;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 900;
+      border: 1px solid rgba(255,255,255,0.3);
+      box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+      position: relative;
+    }
+
+    .mini-card.red {
+      color: #dc2626;
+    }
+
+    .mini-card.back {
+      background: linear-gradient(135deg, #1e3a8a, #111827);
+      border: 1px solid rgba(255,255,255,0.22);
+    }
+
+    .inline-hand {
+      margin-top: 12px;
+      display: grid;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .inline-row {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 12px;
+      padding: 8px;
+    }
+
+    .inline-row-title {
+      font-size: 11px;
+      color: rgba(255,255,255,0.72);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .inline-results {
+      display: grid;
+      gap: 8px;
+      text-align: left;
+      margin-top: 12px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.75);
+    }
+
+    .inline-result-item {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 12px;
+      padding: 8px;
+      line-height: 1.35;
+    }
     .room-tools {
       display: flex;
       flex-wrap: wrap;
@@ -369,6 +450,7 @@
           <span class="pill">Room: <span id="roomCodeDisplay" class="code"></span></span>
           <span class="pill">You are: <strong id="mySeatDisplay"></strong></span>
           <span class="pill">Status: <strong id="roomStatusDisplay"></strong></span>
+          <span class="pill" id="timerPill" style="display:none">Arrange Timer: <strong id="timerDisplay">90s</strong></span>
         </div>
         <div class="tool-right">
           <button id="copyCodeBtn" class="secondary">Copy Code</button>
@@ -485,10 +567,16 @@
     const suits = ["♠", "♥", "♦", "♣"];
     const rankValue = Object.fromEntries(ranks.map((r, i) => [r, i + 2]));
 
+    const POLL_MS = 10000;
+    const ARRANGE_SECONDS = 90;
+
     let state = null;
     let me = null;
     let draggedId = null;
     let roomChannel = null;
+    let pollInterval = null;
+    let timerInterval = null;
+    let timeoutSubmitting = false;
 
     const screens = {
       home: document.getElementById("homeScreen"),
@@ -564,6 +652,7 @@
       saveSession();
       await refreshState();
       subscribeToRoom();
+      startBackgroundRefresh();
       goRoom();
     }
 
@@ -593,6 +682,7 @@
       saveSession();
       await refreshState();
       subscribeToRoom();
+      startBackgroundRefresh();
       goRoom();
     }
 
@@ -621,9 +711,6 @@
           },
           async () => {
             await refreshState();
-            if (state?.status === "showdown") {
-              openShowdown();
-            }
           }
         )
         .subscribe();
@@ -640,6 +727,7 @@
         await sb.removeChannel(roomChannel);
         roomChannel = null;
       }
+      stopBackgroundRefresh();
       localStorage.removeItem("pusoy_online_session");
       screens.room.classList.remove("active");
       screens.home.classList.add("active");
@@ -664,6 +752,7 @@
 
       const joined = getJoinedSeats();
       const submittedCount = joined.filter(s => state.players?.[s]?.submitted).length;
+      updateTimerUI();
 
       if (state.status === "lobby") {
         el("roomMessage").innerHTML = `
@@ -680,7 +769,7 @@
           <strong>Waiting:</strong> all joined players submitted. Banker may open Showdown from Scoring.
         `;
       } else {
-        el("roomMessage").innerHTML = `<strong>Showdown:</strong> all submitted hands are now visible.`;
+        el("roomMessage").innerHTML = `<strong>Showdown:</strong> all submitted hands are now visible below. No popup needed.<br>${renderInlineScoreSummary()}`;
       }
     }
 
@@ -695,6 +784,7 @@
       card.classList.toggle("empty", !player);
       card.classList.toggle("ready", !!player?.submitted);
       card.classList.toggle("me", me.seat === seat);
+      card.classList.toggle("revealed", state.status === "showdown" && !!state.showdown_hands?.[seat]);
 
       card.querySelector(".seat-title").textContent = seatNames[seat];
 
@@ -705,16 +795,31 @@
 
       card.querySelector(".seat-badge").textContent = badge;
 
+      const sub = card.querySelector(".seat-sub");
+
       if (!player) {
-        card.querySelector(".seat-sub").textContent = "Empty";
-      } else if (state.status === "showdown" && state.showdown_hands?.[seat]) {
-        card.querySelector(".seat-sub").textContent = `${player.name} · ${handNameSummary(fromShowdownHand(state.showdown_hands[seat]))}`;
-      } else if (player.submitted) {
-        card.querySelector(".seat-sub").textContent = `${player.name} · Ready`;
+        sub.innerHTML = "Empty";
+        return;
+      }
+
+      if (state.status === "showdown" && state.showdown_hands?.[seat]) {
+        const hand = fromShowdownHand(state.showdown_hands[seat]);
+        sub.innerHTML = `
+          <div>${player.name}</div>
+          ${inlineRevealHand(hand)}
+        `;
       } else if (state.status === "arranging") {
-        card.querySelector(".seat-sub").textContent = `${player.name} · Arranging`;
+        sub.innerHTML = `
+          <div>${player.name} · ${player.submitted ? "Ready" : (seat === me.seat ? "Click to arrange" : "Arranging")}</div>
+          ${miniBacks(13)}
+        `;
+      } else if (state.status === "waiting") {
+        sub.innerHTML = `
+          <div>${player.name} · ${player.submitted ? "Ready" : "Waiting"}</div>
+          ${miniBacks(13)}
+        `;
       } else {
-        card.querySelector(".seat-sub").textContent = player.name;
+        sub.innerHTML = player.name;
       }
     }
 
@@ -729,18 +834,19 @@
       if (state.status === "lobby") {
         sub = me.seat === "banker" ? "Click to start round" : "Banker starts round";
       } else if (state.status === "arranging") {
-        sub = `Submitted ${submitted.length}/${joined.length}`;
+        const seconds = getArrangeSecondsRemaining();
+        sub = `Submitted ${submitted.length}/${joined.length}<br>${seconds === null ? "" : "Timer: " + seconds + "s"}`;
         badge = "Live";
       } else if (state.status === "waiting") {
-        sub = me.seat === "banker" ? "Click for showdown" : "Waiting for banker";
+        sub = me.seat === "banker" ? "Click to reveal cards" : "Waiting for banker";
         badge = "Ready";
       } else {
-        sub = "View results";
+        sub = renderScoringInsideCard();
         badge = "Results";
       }
 
       card.querySelector(".seat-badge").textContent = badge;
-      card.querySelector(".seat-sub").textContent = sub;
+      card.querySelector(".seat-sub").innerHTML = sub;
     }
 
     async function handleSeatClick(seat) {
@@ -773,13 +879,13 @@
         }
 
         if (state.status === "showdown") {
-          openShowdown();
+          el("roomMessage").innerHTML = `<strong>Showdown:</strong> all cards are already flipped up on the table.<br>${renderInlineScoreSummary()}`;
           return;
         }
       }
 
       if (state.status === "showdown") {
-        openShowdown();
+        el("roomMessage").innerHTML = `<strong>Showdown:</strong> all cards are already flipped up on the table.<br>${renderInlineScoreSummary()}`;
       } else {
         alert("Hidden until showdown.");
       }
@@ -819,7 +925,7 @@
       }
 
       if (state.status === "showdown") {
-        openShowdown();
+        el("roomMessage").innerHTML = `<strong>Showdown:</strong> all cards are already flipped up on the table.<br>${renderInlineScoreSummary()}`;
       }
     }
 
@@ -850,7 +956,6 @@
         p_player_token: me.token
       });
       await refreshState();
-      openShowdown();
     }
 
     function openArrange() {
@@ -958,6 +1063,149 @@
 
       closeModal("arrangeModal");
       await refreshState();
+    }
+
+
+    function startBackgroundRefresh() {
+      stopBackgroundRefresh();
+
+      pollInterval = setInterval(async () => {
+        if (!me) return;
+        try {
+          await refreshState();
+        } catch (err) {
+          console.warn("Polling refresh failed", err);
+        }
+      }, POLL_MS);
+
+      timerInterval = setInterval(() => {
+        updateTimerUI();
+        maybeAutoSubmitOnTimeout();
+      }, 1000);
+    }
+
+    function stopBackgroundRefresh() {
+      if (pollInterval) clearInterval(pollInterval);
+      if (timerInterval) clearInterval(timerInterval);
+      pollInterval = null;
+      timerInterval = null;
+      timeoutSubmitting = false;
+    }
+
+    function getArrangeSecondsRemaining() {
+      if (!state || state.status !== "arranging") return null;
+      const started = state.arrangement_started_at || state.updated_at;
+      if (!started) return null;
+
+      const end = new Date(started).getTime() + ARRANGE_SECONDS * 1000;
+      const remaining = Math.ceil((end - Date.now()) / 1000);
+      return Math.max(0, remaining);
+    }
+
+    function updateTimerUI() {
+      const pill = el("timerPill");
+      const display = el("timerDisplay");
+      if (!pill || !display || !state) return;
+
+      const seconds = getArrangeSecondsRemaining();
+      if (seconds === null) {
+        pill.style.display = "none";
+        return;
+      }
+
+      pill.style.display = "inline-flex";
+      display.textContent = `${seconds}s`;
+      display.style.color = seconds <= 15 ? "#dc2626" : "#111827";
+    }
+
+    async function maybeAutoSubmitOnTimeout() {
+      if (!state || !me || state.status !== "arranging") return;
+      if (state.my_submitted || timeoutSubmitting) return;
+
+      const seconds = getArrangeSecondsRemaining();
+      if (seconds === null || seconds > 0) return;
+
+      timeoutSubmitting = true;
+      try {
+        let hand = getMyHandForArrange();
+        const valid = validateHand(hand);
+
+        if (!valid.ok) {
+          const all = [...hand.pool, ...hand.top, ...hand.middle, ...hand.bottom];
+          hand = autoArrange(all);
+          setMyHandForArrange(hand);
+        }
+
+        await callRpc("submit_pusoy_hand", {
+          p_room_code: me.roomCode,
+          p_player_token: me.token,
+          p_top: hand.top,
+          p_middle: hand.middle,
+          p_bottom: hand.bottom
+        });
+
+        closeModal("arrangeModal");
+        await refreshState();
+        el("roomMessage").innerHTML = "<strong>Time up.</strong> Your hand was auto-arranged and submitted.";
+      } catch (err) {
+        console.warn("Auto-submit failed", err);
+      } finally {
+        timeoutSubmitting = false;
+      }
+    }
+
+    function miniBacks(count) {
+      return `<div class="mini-backs">${Array.from({ length: count }).map(() => `<span class="mini-card back"></span>`).join("")}</div>`;
+    }
+
+    function miniCardHtml(card) {
+      return `<span class="mini-card ${card.suit === "♥" || card.suit === "♦" ? "red" : ""}">${card.rank}${card.suit}</span>`;
+    }
+
+    function miniCards(cards) {
+      return `<div class="mini-cards">${sortCards(cards).map(miniCardHtml).join("")}</div>`;
+    }
+
+    function inlineRevealHand(hand) {
+      return `
+        <div class="inline-hand">
+          <div class="inline-row">
+            <div class="inline-row-title"><span>Top</span><span>${evaluate3(hand.top).name}</span></div>
+            ${miniCards(hand.top)}
+          </div>
+          <div class="inline-row">
+            <div class="inline-row-title"><span>Middle</span><span>${evaluate5(hand.middle).name}</span></div>
+            ${miniCards(hand.middle)}
+          </div>
+          <div class="inline-row">
+            <div class="inline-row-title"><span>Bottom</span><span>${evaluate5(hand.bottom).name}</span></div>
+            ${miniCards(hand.bottom)}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderScoringInsideCard() {
+      if (!state?.showdown_hands?.banker) return "Results loading...";
+      const rows = ["player1", "player2", "player3"].map(seat => {
+        const info = state.showdown_hands[seat];
+        if (!info) return "";
+        const result = compareVsBanker(fromShowdownHand(info), fromShowdownHand(state.showdown_hands.banker));
+        return `<div class="inline-result-item"><strong>${seatNames[seat]}:</strong> <span class="${result.className}">${result.outcome}</span><br>${result.details.join("<br>")}</div>`;
+      }).join("");
+
+      return `<div>Cards flipped up</div><div class="inline-results">${rows || "No players to score."}</div>`;
+    }
+
+    function renderInlineScoreSummary() {
+      if (!state?.showdown_hands?.banker) return "";
+      const rows = ["player1", "player2", "player3"].map(seat => {
+        const info = state.showdown_hands[seat];
+        if (!info) return "";
+        const result = compareVsBanker(fromShowdownHand(info), fromShowdownHand(state.showdown_hands.banker));
+        return `<div><strong>${seatNames[seat]}:</strong> <span class="${result.className}">${result.outcome}</span> — ${result.details.join(" | ")}</div>`;
+      }).join("");
+      return rows || "No players to score.";
     }
 
     function openShowdown() {
@@ -1279,6 +1527,7 @@
         me = JSON.parse(raw);
         await refreshState();
         subscribeToRoom();
+        startBackgroundRefresh();
         goRoom();
       } catch (err) {
         console.warn("Could not restore session", err);
