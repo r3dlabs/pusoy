@@ -257,6 +257,97 @@
         0 5px 10px rgba(0,0,0,0.2);
     }
 
+    .main-arrange-board {
+      display: none;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 18px;
+      margin-top: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .main-arrange-board.active {
+      display: block;
+    }
+
+    .main-arrange-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .main-arrange-head h2 {
+      margin: 0;
+      font-size: clamp(22px, 3vw, 34px);
+      letter-spacing: -0.04em;
+    }
+
+    .main-arrange-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .main-arrange-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 980px) {
+      .main-arrange-grid {
+        grid-template-columns: 1.15fr 0.85fr;
+      }
+    }
+
+    .main-dropzone {
+      min-height: 96px;
+      border: 2px dashed #d1d5db;
+      border-radius: 18px;
+      padding: 10px;
+      background: #fff;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .main-dropzone.hover {
+      border-color: var(--accent);
+      background: rgba(37,99,235,0.08);
+    }
+
+    .main-card-pool {
+      min-height: 230px;
+    }
+
+    .main-card-selected {
+      outline: 4px solid rgba(37,99,235,0.35);
+      transform: translateY(-4px);
+    }
+
+    .tap-hint {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      margin-top: 8px;
+    }
+
+    .main-arrange-note {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      border-radius: 16px;
+      padding: 12px;
+      margin-top: 12px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
     .inline-hand {
       margin-top: 12px;
       display: grid;
@@ -558,6 +649,54 @@
         </div>
       </div>
 
+      <div id="mainArrangeBoard" class="main-arrange-board">
+        <div class="main-arrange-head">
+          <div>
+            <h2 id="mainArrangeTitle">Arrange Your Cards</h2>
+            <div class="tap-hint">Tip: drag cards, or tap a card then tap Top / Middle / Bottom.</div>
+          </div>
+          <div class="main-arrange-actions">
+            <button id="mainAutoArrangeBtn" class="secondary">Auto Arrange</button>
+            <button id="mainClearLayoutBtn" class="secondary">Clear Layout</button>
+            <button id="mainSubmitHandBtn" class="good">Submit Hand</button>
+          </div>
+        </div>
+
+        <div class="main-arrange-grid">
+          <div>
+            <div class="hand-row">
+              <div class="hand-label">Top<br>3 cards</div>
+              <div>
+                <div class="main-dropzone" data-main-zone="top" data-limit="3"></div>
+                <div class="hand-name" id="mainTopName"></div>
+              </div>
+            </div>
+
+            <div class="hand-row">
+              <div class="hand-label">Middle<br>5 cards</div>
+              <div>
+                <div class="main-dropzone" data-main-zone="middle" data-limit="5"></div>
+                <div class="hand-name" id="mainMiddleName"></div>
+              </div>
+            </div>
+
+            <div class="hand-row">
+              <div class="hand-label">Bottom<br>5 cards</div>
+              <div>
+                <div class="main-dropzone" data-main-zone="bottom" data-limit="5"></div>
+                <div class="hand-name" id="mainBottomName"></div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="small">Unplaced cards</div>
+            <div class="main-dropzone main-card-pool" data-main-zone="pool" data-limit="13"></div>
+            <div class="main-arrange-note" id="mainArrangeNote"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="status-box" id="roomMessage"></div>
     </section>
   </div>
@@ -641,6 +780,7 @@
     let pollInterval = null;
     let timerInterval = null;
     let timeoutSubmitting = false;
+    let selectedCardId = null;
 
     const screens = {
       home: document.getElementById("homeScreen"),
@@ -673,6 +813,10 @@
     el("autoArrangeBtn").addEventListener("click", autoArrangeMySeat);
     el("clearLayoutBtn").addEventListener("click", clearMyLayout);
     el("submitHandBtn").addEventListener("click", submitHand);
+
+    el("mainAutoArrangeBtn").addEventListener("click", autoArrangeMySeat);
+    el("mainClearLayoutBtn").addEventListener("click", clearMyLayout);
+    el("mainSubmitHandBtn").addEventListener("click", submitHand);
 
     document.querySelectorAll(".seat-card").forEach(card => {
       card.addEventListener("click", () => handleSeatClick(card.dataset.seat));
@@ -815,6 +959,31 @@
     }
 
 
+
+    document.querySelectorAll(".main-dropzone").forEach(zone => {
+      zone.addEventListener("dragover", e => {
+        e.preventDefault();
+        zone.classList.add("hover");
+      });
+
+      zone.addEventListener("dragleave", () => zone.classList.remove("hover"));
+
+      zone.addEventListener("drop", e => {
+        e.preventDefault();
+        zone.classList.remove("hover");
+        if (!draggedId) return;
+        moveCard(draggedId, zone.dataset.mainZone);
+      });
+
+      zone.addEventListener("click", e => {
+        if (!selectedCardId) return;
+        const clickedCard = e.target.closest(".playing-card");
+        if (clickedCard) return;
+        moveCard(selectedCardId, zone.dataset.mainZone);
+        selectedCardId = null;
+      });
+    });
+
     function updateHeaderControls() {
       const newDealBtn = el("headerNewDealBtn");
       const backLobbyBtn = el("headerBackLobbyBtn");
@@ -876,6 +1045,44 @@
       await refreshState();
     }
 
+
+    function renderMainArrangeBoard() {
+      const board = el("mainArrangeBoard");
+      if (!state || !me || state.status !== "arranging" || state.my_submitted) {
+        board.classList.remove("active");
+        selectedCardId = null;
+        return;
+      }
+
+      board.classList.add("active");
+      el("mainArrangeTitle").textContent = `${seatNames[me.seat]} — Arrange Your Cards`;
+      renderMainArrange(getMyHandForArrange());
+    }
+
+    function renderMainArrange(hand) {
+      renderCards(document.querySelector('[data-main-zone="top"]'), hand.top, true);
+      renderCards(document.querySelector('[data-main-zone="middle"]'), hand.middle, true);
+      renderCards(document.querySelector('[data-main-zone="bottom"]'), hand.bottom, true);
+      renderCards(document.querySelector('[data-main-zone="pool"]'), hand.pool, true);
+
+      el("mainTopName").textContent = hand.top.length === 3 ? evaluate3(hand.top).name : "";
+      el("mainMiddleName").textContent = hand.middle.length === 5 ? evaluate5(hand.middle).name : "";
+      el("mainBottomName").textContent = hand.bottom.length === 5 ? evaluate5(hand.bottom).name : "";
+
+      const valid = validateHand(hand);
+      el("mainArrangeNote").innerHTML = valid.ok
+        ? `<span class="win">Valid hand.</span> Click Submit Hand when ready.`
+        : `<span class="loss">${valid.reason}</span>`;
+
+      applySelectedCardStyle();
+    }
+
+    function applySelectedCardStyle() {
+      document.querySelectorAll(".playing-card").forEach(card => {
+        card.classList.toggle("main-card-selected", !!selectedCardId && card.dataset.id === selectedCardId);
+      });
+    }
+
     function renderRoom() {
       if (!state || !me) return;
 
@@ -886,6 +1093,7 @@
       seatOrder.forEach(seat => renderSeat(seat));
       renderScoringCard();
       updateHeaderControls();
+      renderMainArrangeBoard();
 
       const joined = getJoinedSeats();
       const submittedCount = joined.filter(s => state.players?.[s]?.submitted).length;
@@ -1022,7 +1230,7 @@
         }
 
         if (state.status === "arranging") {
-          openArrange();
+          document.getElementById("mainArrangeBoard")?.scrollIntoView({ behavior: "smooth", block: "start" });
           return;
         }
 
@@ -1099,7 +1307,7 @@
       });
 
       await refreshState();
-      if (me.seat === "banker") openArrange();
+      document.getElementById("mainArrangeBoard")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     async function revealShowdown() {
@@ -1150,6 +1358,10 @@
       el("arrangeNote").innerHTML = valid.ok
         ? `<span class="win">Valid hand.</span> Click Submit Hand when ready.`
         : `<span class="loss">${valid.reason}</span>`;
+
+      if (state?.status === "arranging" && !state?.my_submitted) {
+        renderMainArrange(hand);
+      }
     }
 
     function moveCard(cardId, targetZone) {
@@ -1176,7 +1388,11 @@
       }
 
       setMyHandForArrange(hand);
+      selectedCardId = null;
       renderArrange(hand);
+      if (state?.status === "arranging" && !state?.my_submitted) {
+        renderMainArrange(hand);
+      }
     }
 
     function autoArrangeMySeat() {
@@ -1184,7 +1400,11 @@
       const all = [...current.pool, ...current.top, ...current.middle, ...current.bottom];
       const arranged = autoArrange(all);
       setMyHandForArrange(arranged);
+      selectedCardId = null;
       renderArrange(arranged);
+      if (state?.status === "arranging" && !state?.my_submitted) {
+        renderMainArrange(arranged);
+      }
     }
 
     function clearMyLayout() {
@@ -1194,7 +1414,11 @@
       hand.middle = [];
       hand.bottom = [];
       setMyHandForArrange(hand);
+      selectedCardId = null;
       renderArrange(hand);
+      if (state?.status === "arranging" && !state?.my_submitted) {
+        renderMainArrange(hand);
+      }
     }
 
     async function submitHand() {
@@ -1572,6 +1796,11 @@
         div.innerHTML = `<span class="rank">${card.rank}</span><span class="suit">${card.suit}</span>`;
         if (draggable) {
           div.addEventListener("dragstart", () => draggedId = card.id);
+          div.addEventListener("click", e => {
+            e.stopPropagation();
+            selectedCardId = selectedCardId === card.id ? null : card.id;
+            applySelectedCardStyle();
+          });
         }
         container.appendChild(div);
       });
