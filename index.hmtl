@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pusoy Private Room Online</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #f6f4ef;
+      --ink: #111111;
+      --muted: #6b7280;
+      --card: #ffffff;
+      --black: #050505;
+      --white: #ffffff;
+      --line: #e5e7eb;
+      --accent: #2563eb;
+      --good: #16a34a;
+      --bad: #dc2626;
+      --warn: #d97706;
+      --soft: #f3f4f6;
+      --shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+      --radius: 24px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(37,99,235,0.08), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(22,163,74,0.08), transparent 30%),
+        var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+    button, input, select { font: inherit; }
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 11px 16px;
+      cursor: pointer;
+      background: var(--black);
+      color: var(--white);
+      font-weight: 700;
+      transition: transform 0.12s ease, opacity 0.12s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.42; cursor: not-allowed; transform: none; }
+    button.secondary { background: #e5e7eb; color: #111827; }
+    button.good { background: var(--good); }
+    button.bad { background: var(--bad); }
+    input, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 13px;
+      background: #fff;
+      outline: none;
+    }
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
+    }
+    .app { max-width: 1220px; margin: 0 auto; padding: 22px; }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0 18px;
+    }
+    .brand { display: flex; flex-direction: column; gap: 4px; }
+    .brand h1 { margin: 0; font-size: clamp(24px, 4vw, 38px); letter-spacing: -0.04em; }
+    .brand span { color: var(--muted); font-size: 14px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border-radius: 999px;
+      padding: 7px 11px;
+      background: #fff;
+      border: 1px solid var(--line);
+      font-size: 13px;
+      color: #374151;
+      white-space: nowrap;
+    }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      align-items: stretch;
+      margin-top: 12px;
+    }
+    @media (min-width: 860px) { .hero { grid-template-columns: 1.1fr 0.9fr; } }
+    .panel {
+      background: rgba(255,255,255,0.88);
+      border: 1px solid rgba(229,231,235,0.9);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .panel h2 { margin: 0 0 8px; font-size: 24px; letter-spacing: -0.03em; }
+    .panel p { color: var(--muted); line-height: 1.5; }
+    .form-grid { display: grid; gap: 12px; margin-top: 16px; }
+    .two { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 680px) { .two { grid-template-columns: 1fr 1fr; } }
+    .room-layout { display: grid; gap: 28px; margin-top: 18px; }
+    .top-seats {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 28px;
+      justify-items: center;
+    }
+    .bottom-seats {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+    @media (min-width: 760px) {
+      .top-seats { grid-template-columns: 1fr 1fr; padding: 0 18%; }
+      .bottom-seats { grid-template-columns: repeat(3, 1fr); }
+    }
+    .seat-card {
+      min-height: 178px;
+      width: 100%;
+      border-radius: 20px;
+      background: var(--black);
+      color: var(--white);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 18px;
+      text-align: center;
+      box-shadow: 0 16px 34px rgba(0,0,0,0.22);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .seat-card:hover { outline: 4px solid rgba(37,99,235,0.18); }
+    .seat-title { font-size: clamp(25px, 3vw, 36px); line-height: 1.05; }
+    .seat-sub { margin-top: 10px; color: rgba(255,255,255,0.68); font-size: 14px; }
+    .seat-badge {
+      position: absolute;
+      top: 13px;
+      right: 13px;
+      font-size: 12px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px;
+      padding: 6px 9px;
+    }
+    .seat-card.ready .seat-badge { background: rgba(22,163,74,0.25); color: #bbf7d0; }
+    .seat-card.empty { opacity: 0.56; }
+    .seat-card.me { outline: 4px solid rgba(37,99,235,0.38); }
+    .room-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 18px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 12px;
+    }
+    .tool-left, .tool-right { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .code { font-weight: 900; letter-spacing: 0.12em; font-size: 18px; }
+    .status-box {
+      margin-top: 16px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      color: #374151;
+      line-height: 1.45;
+    }
+    .arrange-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      margin-top: 16px;
+    }
+    @media (min-width: 980px) { .arrange-grid { grid-template-columns: 1.1fr 0.9fr; } }
+    .hand-row {
+      display: grid;
+      grid-template-columns: 78px 1fr;
+      gap: 10px;
+      margin: 10px 0;
+      align-items: start;
+    }
+    .hand-label { color: var(--muted); font-size: 13px; padding-top: 14px; line-height: 1.25; }
+    .dropzone {
+      min-height: 80px;
+      border: 2px dashed #d1d5db;
+      border-radius: 18px;
+      padding: 10px;
+      background: #fff;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .dropzone.hover { border-color: var(--accent); background: rgba(37,99,235,0.08); }
+    .playing-card {
+      width: 52px;
+      height: 70px;
+      border-radius: 12px;
+      background: #fff;
+      color: #111827;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      font-weight: 900;
+      cursor: grab;
+      user-select: none;
+    }
+    .playing-card.red { color: #dc2626; }
+    .playing-card .rank { font-size: 18px; }
+    .playing-card .suit { position: absolute; right: 7px; bottom: 5px; font-size: 15px; }
+    .hand-name { margin-top: 5px; color: var(--accent); font-size: 12px; font-weight: 700; }
+    .small { color: var(--muted); font-size: 13px; }
+    .result-list { display: grid; gap: 10px; margin-top: 14px; }
+    .result-card {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 18px;
+      padding: 14px;
+    }
+    .result-card h3 { margin: 0 0 8px; }
+    .win { color: var(--good); font-weight: 900; }
+    .loss { color: var(--bad); font-weight: 900; }
+    .push { color: var(--warn); font-weight: 900; }
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 50;
+    }
+    .modal.active { display: flex; }
+    .modal-card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 20px;
+      width: min(760px, 100%);
+      max-height: 88vh;
+      overflow: auto;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+    }
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .modal-head h2 { margin: 0; }
+    .xbtn { background: #f3f4f6; color: #111827; padding: 8px 12px; }
+    .reveal-hand {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 12px;
+      margin: 10px 0;
+      background: #fafafa;
+    }
+    .note {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      border-radius: 16px;
+      padding: 12px;
+      margin-top: 12px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .schema {
+      white-space: pre-wrap;
+      background: #111827;
+      color: #e5e7eb;
+      border-radius: 18px;
+      padding: 14px;
+      overflow: auto;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="brand">
+        <h1>Pusoy Private Room</h1>
+        <span>Online SPA: 1 banker vs 3 players</span>
+      </div>
+      <div class="pill" id="modePill">Supabase online mode</div>
+    </div>
+
+    <section id="homeScreen" class="screen active">
+      <div class="hero">
+        <div class="panel">
+          <h2>Create or join a room</h2>
+          <p>
+            Banker creates a room. Players join with the 4-digit code. Each player only receives their own cards before showdown.
+          </p>
+
+          <div class="form-grid">
+            <label>
+              <span class="small">Your name</span>
+              <input id="nameInput" placeholder="Example: Dad, Kuya, Player 1" />
+            </label>
+
+            <div class="two">
+              <button id="createRoomBtn">Create Room as Banker</button>
+              <button id="joinRoomOpenBtn" class="secondary">Join Room as Player</button>
+            </div>
+
+            <div id="joinBox" style="display:none" class="form-grid">
+              <label>
+                <span class="small">Room code</span>
+                <input id="roomCodeInput" placeholder="Example: 4821" />
+              </label>
+              <label>
+                <span class="small">Choose seat</span>
+                <select id="seatSelect">
+                  <option value="player1">Player 1</option>
+                  <option value="player2">Player 2</option>
+                  <option value="player3">Player 3</option>
+                </select>
+              </label>
+              <button id="joinRoomBtn">Join Room</button>
+            </div>
+          </div>
+
+          <div class="note">
+            Run the SQL setup first in Supabase. Then upload this HTML to Vercel or open it locally for testing.
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>How it works</h2>
+          <p>Cards and submitted hands are stored in Supabase. Room updates are synced using Supabase Realtime events.</p>
+          <div class="schema">Flow:
+
+1. Banker creates room
+2. Kids join with room code
+3. Banker starts round
+4. Each browser fetches its own cards
+5. Players submit Top / Middle / Bottom
+6. Banker reveals showdown
+7. Everyone sees final hands and scoring</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="roomScreen" class="screen">
+      <div class="room-tools">
+        <div class="tool-left">
+          <span class="pill">Room: <span id="roomCodeDisplay" class="code"></span></span>
+          <span class="pill">You are: <strong id="mySeatDisplay"></strong></span>
+          <span class="pill">Status: <strong id="roomStatusDisplay"></strong></span>
+        </div>
+        <div class="tool-right">
+          <button id="copyCodeBtn" class="secondary">Copy Code</button>
+          <button id="leaveBtn" class="secondary">Leave</button>
+        </div>
+      </div>
+
+      <div class="room-layout">
+        <div class="top-seats">
+          <div class="seat-card" id="seat-banker" data-seat="banker">
+            <div class="seat-badge">Host</div>
+            <div class="seat-title">Banker</div>
+            <div class="seat-sub">Empty</div>
+          </div>
+
+          <div class="seat-card" id="seat-scoring" data-seat="scoring">
+            <div class="seat-badge">Control</div>
+            <div class="seat-title">Scoring</div>
+            <div class="seat-sub">Waiting for room</div>
+          </div>
+        </div>
+
+        <div class="bottom-seats">
+          <div class="seat-card" id="seat-player1" data-seat="player1">
+            <div class="seat-badge">Seat</div>
+            <div class="seat-title">Player 1</div>
+            <div class="seat-sub">Empty</div>
+          </div>
+
+          <div class="seat-card" id="seat-player2" data-seat="player2">
+            <div class="seat-badge">Seat</div>
+            <div class="seat-title">Player 2</div>
+            <div class="seat-sub">Empty</div>
+          </div>
+
+          <div class="seat-card" id="seat-player3" data-seat="player3">
+            <div class="seat-badge">Seat</div>
+            <div class="seat-title">Player 3</div>
+            <div class="seat-sub">Empty</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="status-box" id="roomMessage"></div>
+    </section>
+  </div>
+
+  <div class="modal" id="arrangeModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="arrangeTitle">Arrange Cards</h2>
+        <button class="xbtn" id="closeArrangeBtn">Close</button>
+      </div>
+
+      <div class="arrange-grid">
+        <div>
+          <div class="hand-row">
+            <div class="hand-label">Top<br>3 cards</div>
+            <div>
+              <div class="dropzone" data-zone="top" data-limit="3"></div>
+              <div class="hand-name" id="topName"></div>
+            </div>
+          </div>
+
+          <div class="hand-row">
+            <div class="hand-label">Middle<br>5 cards</div>
+            <div>
+              <div class="dropzone" data-zone="middle" data-limit="5"></div>
+              <div class="hand-name" id="middleName"></div>
+            </div>
+          </div>
+
+          <div class="hand-row">
+            <div class="hand-label">Bottom<br>5 cards</div>
+            <div>
+              <div class="dropzone" data-zone="bottom" data-limit="5"></div>
+              <div class="hand-name" id="bottomName"></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="small">Unplaced cards</div>
+          <div class="dropzone" data-zone="pool" data-limit="13" style="min-height:220px"></div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+            <button id="autoArrangeBtn" class="secondary">Auto Arrange</button>
+            <button id="clearLayoutBtn" class="secondary">Clear Layout</button>
+            <button id="submitHandBtn" class="good">Submit Hand</button>
+          </div>
+          <div class="note" id="arrangeNote">
+            After you submit, your hand stays hidden until everyone is ready for showdown.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="showdownModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2>Showdown</h2>
+        <button class="xbtn" id="closeShowdownBtn">Close</button>
+      </div>
+      <div id="showdownContent"></div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://kappyxsapcrldmfpswbx.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImthcHB5eHNhcGNybGRtZnBzd2J4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNjI0MzYsImV4cCI6MjA4OTkzODQzNn0.BWBia4jtkXIFtpn2au0X4Wdcvg4faqjc_93wXWlO_w4";
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+    const suits = ["♠", "♥", "♦", "♣"];
+    const rankValue = Object.fromEntries(ranks.map((r, i) => [r, i + 2]));
+
+    let state = null;
+    let me = null;
+    let draggedId = null;
+    let roomChannel = null;
+
+    const screens = {
+      home: document.getElementById("homeScreen"),
+      room: document.getElementById("roomScreen")
+    };
+
+    const el = id => document.getElementById(id);
+
+    const seatNames = {
+      banker: "Banker",
+      player1: "Player 1",
+      player2: "Player 2",
+      player3: "Player 3"
+    };
+
+    const seatOrder = ["banker", "player1", "player2", "player3"];
+
+    el("joinRoomOpenBtn").addEventListener("click", () => {
+      el("joinBox").style.display = el("joinBox").style.display === "none" ? "grid" : "none";
+    });
+
+    el("createRoomBtn").addEventListener("click", createRoom);
+    el("joinRoomBtn").addEventListener("click", joinRoom);
+    el("copyCodeBtn").addEventListener("click", copyCode);
+    el("leaveBtn").addEventListener("click", leaveRoom);
+    el("closeArrangeBtn").addEventListener("click", () => closeModal("arrangeModal"));
+    el("closeShowdownBtn").addEventListener("click", () => closeModal("showdownModal"));
+    el("autoArrangeBtn").addEventListener("click", autoArrangeMySeat);
+    el("clearLayoutBtn").addEventListener("click", clearMyLayout);
+    el("submitHandBtn").addEventListener("click", submitHand);
+
+    document.querySelectorAll(".seat-card").forEach(card => {
+      card.addEventListener("click", () => handleSeatClick(card.dataset.seat));
+    });
+
+    document.querySelectorAll(".dropzone").forEach(zone => {
+      zone.addEventListener("dragover", e => {
+        e.preventDefault();
+        zone.classList.add("hover");
+      });
+      zone.addEventListener("dragleave", () => zone.classList.remove("hover"));
+      zone.addEventListener("drop", e => {
+        e.preventDefault();
+        zone.classList.remove("hover");
+        if (!draggedId) return;
+        moveCard(draggedId, zone.dataset.zone);
+      });
+    });
+
+    restoreSession();
+
+    async function callRpc(fn, args) {
+      const { data, error } = await sb.rpc(fn, args);
+      if (error) {
+        console.error(error);
+        alert(error.message || "Supabase error");
+        throw error;
+      }
+      return data;
+    }
+
+    async function createRoom() {
+      const name = cleanName(el("nameInput").value) || "Banker";
+      const data = await callRpc("create_pusoy_room", { p_name: name });
+
+      me = {
+        roomCode: data.room_code,
+        seat: data.seat,
+        token: data.player_token,
+        name
+      };
+
+      saveSession();
+      await refreshState();
+      subscribeToRoom();
+      goRoom();
+    }
+
+    async function joinRoom() {
+      const name = cleanName(el("nameInput").value) || "Player";
+      const code = el("roomCodeInput").value.trim();
+      const seat = el("seatSelect").value;
+
+      if (!code) {
+        alert("Enter a room code first.");
+        return;
+      }
+
+      const data = await callRpc("join_pusoy_room", {
+        p_room_code: code,
+        p_name: name,
+        p_seat: seat
+      });
+
+      me = {
+        roomCode: data.room_code,
+        seat: data.seat,
+        token: data.player_token,
+        name
+      };
+
+      saveSession();
+      await refreshState();
+      subscribeToRoom();
+      goRoom();
+    }
+
+    async function refreshState() {
+      if (!me) return;
+      state = await callRpc("get_pusoy_my_state", {
+        p_room_code: me.roomCode,
+        p_player_token: me.token
+      });
+      renderRoom();
+    }
+
+    function subscribeToRoom() {
+      if (!me) return;
+      if (roomChannel) sb.removeChannel(roomChannel);
+
+      roomChannel = sb
+        .channel("room_events_" + me.roomCode)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "room_events",
+            filter: "room_code=eq." + me.roomCode
+          },
+          async () => {
+            await refreshState();
+            if (state?.status === "showdown") {
+              openShowdown();
+            }
+          }
+        )
+        .subscribe();
+    }
+
+    function goRoom() {
+      screens.home.classList.remove("active");
+      screens.room.classList.add("active");
+      renderRoom();
+    }
+
+    async function leaveRoom() {
+      if (roomChannel) {
+        await sb.removeChannel(roomChannel);
+        roomChannel = null;
+      }
+      localStorage.removeItem("pusoy_online_session");
+      screens.room.classList.remove("active");
+      screens.home.classList.add("active");
+      state = null;
+      me = null;
+    }
+
+    function copyCode() {
+      navigator.clipboard?.writeText(me.roomCode);
+      el("roomMessage").textContent = "Room code copied.";
+    }
+
+    function renderRoom() {
+      if (!state || !me) return;
+
+      el("roomCodeDisplay").textContent = me.roomCode;
+      el("mySeatDisplay").textContent = seatNames[me.seat];
+      el("roomStatusDisplay").textContent = state.status;
+
+      seatOrder.forEach(seat => renderSeat(seat));
+      renderScoringCard();
+
+      const joined = getJoinedSeats();
+      const submittedCount = joined.filter(s => state.players?.[s]?.submitted).length;
+
+      if (state.status === "lobby") {
+        el("roomMessage").innerHTML = `
+          <strong>Lobby:</strong> ${joined.length}/4 seats joined.
+          ${me.seat === "banker" ? "As banker, click Scoring when ready to start the round." : "Wait for the banker to start the round."}
+        `;
+      } else if (state.status === "arranging") {
+        el("roomMessage").innerHTML = `
+          <strong>Arrange phase:</strong> everyone should arrange their cards.
+          Submitted: ${submittedCount}/${joined.length}.
+        `;
+      } else if (state.status === "waiting") {
+        el("roomMessage").innerHTML = `
+          <strong>Waiting:</strong> all joined players submitted. Banker may open Showdown from Scoring.
+        `;
+      } else {
+        el("roomMessage").innerHTML = `<strong>Showdown:</strong> all submitted hands are now visible.`;
+      }
+    }
+
+    function getJoinedSeats() {
+      return seatOrder.filter(s => state.players?.[s]?.joined);
+    }
+
+    function renderSeat(seat) {
+      const card = el("seat-" + seat);
+      const player = state.players?.[seat];
+
+      card.classList.toggle("empty", !player);
+      card.classList.toggle("ready", !!player?.submitted);
+      card.classList.toggle("me", me.seat === seat);
+
+      card.querySelector(".seat-title").textContent = seatNames[seat];
+
+      let badge = "Seat";
+      if (seat === "banker") badge = "Host";
+      if (player?.submitted) badge = "Submitted ✓";
+      if (me.seat === seat) badge = "You";
+
+      card.querySelector(".seat-badge").textContent = badge;
+
+      if (!player) {
+        card.querySelector(".seat-sub").textContent = "Empty";
+      } else if (state.status === "showdown" && state.showdown_hands?.[seat]) {
+        card.querySelector(".seat-sub").textContent = `${player.name} · ${handNameSummary(fromShowdownHand(state.showdown_hands[seat]))}`;
+      } else if (player.submitted) {
+        card.querySelector(".seat-sub").textContent = `${player.name} · Ready`;
+      } else if (state.status === "arranging") {
+        card.querySelector(".seat-sub").textContent = `${player.name} · Arranging`;
+      } else {
+        card.querySelector(".seat-sub").textContent = player.name;
+      }
+    }
+
+    function renderScoringCard() {
+      const card = el("seat-scoring");
+      const joined = getJoinedSeats();
+      const submitted = joined.filter(s => state.players?.[s]?.submitted);
+
+      let sub = "Waiting in lobby";
+      let badge = "Control";
+
+      if (state.status === "lobby") {
+        sub = me.seat === "banker" ? "Click to start round" : "Banker starts round";
+      } else if (state.status === "arranging") {
+        sub = `Submitted ${submitted.length}/${joined.length}`;
+        badge = "Live";
+      } else if (state.status === "waiting") {
+        sub = me.seat === "banker" ? "Click for showdown" : "Waiting for banker";
+        badge = "Ready";
+      } else {
+        sub = "View results";
+        badge = "Results";
+      }
+
+      card.querySelector(".seat-badge").textContent = badge;
+      card.querySelector(".seat-sub").textContent = sub;
+    }
+
+    async function handleSeatClick(seat) {
+      if (!state || !me) return;
+
+      if (seat === "scoring") {
+        await handleScoringClick();
+        return;
+      }
+
+      if (!state.players?.[seat]) {
+        alert("This seat is empty.");
+        return;
+      }
+
+      if (seat === me.seat) {
+        if (state.status === "lobby") {
+          alert("Wait for the banker to start the round.");
+          return;
+        }
+
+        if (state.status === "arranging") {
+          openArrange();
+          return;
+        }
+
+        if (state.status === "waiting") {
+          alert("Your hand is submitted. Waiting for showdown.");
+          return;
+        }
+
+        if (state.status === "showdown") {
+          openShowdown();
+          return;
+        }
+      }
+
+      if (state.status === "showdown") {
+        openShowdown();
+      } else {
+        alert("Hidden until showdown.");
+      }
+    }
+
+    async function handleScoringClick() {
+      if (state.status === "lobby") {
+        if (me.seat !== "banker") {
+          alert("Only the banker can start the round.");
+          return;
+        }
+
+        const joined = getJoinedSeats();
+        if (joined.length < 2) {
+          alert("At least banker and one player should join first.");
+          return;
+        }
+
+        await startRound();
+        return;
+      }
+
+      if (state.status === "arranging") {
+        const joined = getJoinedSeats();
+        const submitted = joined.filter(s => state.players?.[s]?.submitted);
+        alert(`Waiting for submissions: ${submitted.length}/${joined.length}`);
+        return;
+      }
+
+      if (state.status === "waiting") {
+        if (me.seat !== "banker") {
+          alert("Waiting for banker to reveal showdown.");
+          return;
+        }
+        await revealShowdown();
+        return;
+      }
+
+      if (state.status === "showdown") {
+        openShowdown();
+      }
+    }
+
+    async function startRound() {
+      const joined = getJoinedSeats();
+      const deck = shuffle(makeDeck());
+      const deals = {};
+      let offset = 0;
+
+      joined.forEach(seat => {
+        deals[seat] = deck.slice(offset, offset + 13);
+        offset += 13;
+      });
+
+      await callRpc("start_pusoy_round", {
+        p_room_code: me.roomCode,
+        p_player_token: me.token,
+        p_deals: deals
+      });
+
+      await refreshState();
+      if (me.seat === "banker") openArrange();
+    }
+
+    async function revealShowdown() {
+      await callRpc("reveal_pusoy_showdown", {
+        p_room_code: me.roomCode,
+        p_player_token: me.token
+      });
+      await refreshState();
+      openShowdown();
+    }
+
+    function openArrange() {
+      const hand = getMyHandForArrange();
+      el("arrangeTitle").textContent = `${seatNames[me.seat]} — Arrange Your Cards`;
+      renderArrange(hand);
+      openModal("arrangeModal");
+    }
+
+    function getMyHandForArrange() {
+      const h = state.my_hand || {};
+      return {
+        pool: h.private_cards || [],
+        top: h.top_cards || [],
+        middle: h.middle_cards || [],
+        bottom: h.bottom_cards || []
+      };
+    }
+
+    function setMyHandForArrange(hand) {
+      state.my_hand = {
+        private_cards: hand.pool,
+        top_cards: hand.top,
+        middle_cards: hand.middle,
+        bottom_cards: hand.bottom
+      };
+    }
+
+    function renderArrange(hand) {
+      renderCards(document.querySelector('[data-zone="top"]'), hand.top, true);
+      renderCards(document.querySelector('[data-zone="middle"]'), hand.middle, true);
+      renderCards(document.querySelector('[data-zone="bottom"]'), hand.bottom, true);
+      renderCards(document.querySelector('[data-zone="pool"]'), hand.pool, true);
+
+      el("topName").textContent = hand.top.length === 3 ? evaluate3(hand.top).name : "";
+      el("middleName").textContent = hand.middle.length === 5 ? evaluate5(hand.middle).name : "";
+      el("bottomName").textContent = hand.bottom.length === 5 ? evaluate5(hand.bottom).name : "";
+
+      const valid = validateHand(hand);
+      el("arrangeNote").innerHTML = valid.ok
+        ? `<span class="win">Valid hand.</span> Click Submit Hand when ready.`
+        : `<span class="loss">${valid.reason}</span>`;
+    }
+
+    function moveCard(cardId, targetZone) {
+      const hand = getMyHandForArrange();
+      const areas = ["pool", "top", "middle", "bottom"];
+      let card = null;
+
+      for (const area of areas) {
+        const idx = hand[area].findIndex(c => c.id === cardId);
+        if (idx >= 0) {
+          card = hand[area].splice(idx, 1)[0];
+          break;
+        }
+      }
+
+      if (!card) return;
+
+      const limit = Number(document.querySelector(`[data-zone="${targetZone}"]`).dataset.limit);
+      if (hand[targetZone].length >= limit) {
+        hand.pool.push(card);
+        alert("That row is full.");
+      } else {
+        hand[targetZone].push(card);
+      }
+
+      setMyHandForArrange(hand);
+      renderArrange(hand);
+    }
+
+    function autoArrangeMySeat() {
+      const current = getMyHandForArrange();
+      const all = [...current.pool, ...current.top, ...current.middle, ...current.bottom];
+      const arranged = autoArrange(all);
+      setMyHandForArrange(arranged);
+      renderArrange(arranged);
+    }
+
+    function clearMyLayout() {
+      const hand = getMyHandForArrange();
+      hand.pool = [...hand.pool, ...hand.top, ...hand.middle, ...hand.bottom];
+      hand.top = [];
+      hand.middle = [];
+      hand.bottom = [];
+      setMyHandForArrange(hand);
+      renderArrange(hand);
+    }
+
+    async function submitHand() {
+      const hand = getMyHandForArrange();
+      const valid = validateHand(hand);
+      if (!valid.ok) {
+        alert("Cannot submit: " + valid.reason);
+        return;
+      }
+
+      await callRpc("submit_pusoy_hand", {
+        p_room_code: me.roomCode,
+        p_player_token: me.token,
+        p_top: hand.top,
+        p_middle: hand.middle,
+        p_bottom: hand.bottom
+      });
+
+      closeModal("arrangeModal");
+      await refreshState();
+    }
+
+    function openShowdown() {
+      if (state.status !== "showdown" || !state.showdown_hands) {
+        alert("Showdown is not ready yet.");
+        return;
+      }
+
+      const html = [];
+      html.push(`<div class="result-list">`);
+
+      seatOrder.forEach(seat => {
+        const info = state.showdown_hands[seat];
+        if (!info) return;
+        const hand = fromShowdownHand(info);
+        html.push(`
+          <div class="reveal-hand">
+            <h3>${seatNames[seat]} — ${info.name}</h3>
+            ${renderHandLine("Top", hand.top, evaluate3(hand.top).name)}
+            ${renderHandLine("Middle", hand.middle, evaluate5(hand.middle).name)}
+            ${renderHandLine("Bottom", hand.bottom, evaluate5(hand.bottom).name)}
+          </div>
+        `);
+      });
+
+      html.push(`</div>`);
+      html.push(`<h2>Scoring vs Banker</h2>`);
+      html.push(`<div class="result-list">`);
+
+      ["player1", "player2", "player3"].forEach(seat => {
+        const info = state.showdown_hands[seat];
+        if (!info || !state.showdown_hands.banker) return;
+        const result = compareVsBanker(fromShowdownHand(info), fromShowdownHand(state.showdown_hands.banker));
+        html.push(`
+          <div class="result-card">
+            <h3>${seatNames[seat]} vs Banker: <span class="${result.className}">${result.outcome}</span></h3>
+            <div class="small">${result.details.join("<br>")}</div>
+          </div>
+        `);
+      });
+
+      html.push(`</div>`);
+
+      if (me.seat === "banker") {
+        html.push(`
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+            <button onclick="newRound()">New Round</button>
+            <button class="secondary" onclick="resetToLobby()">Back to Lobby</button>
+          </div>
+        `);
+      }
+
+      el("showdownContent").innerHTML = html.join("");
+      openModal("showdownModal");
+    }
+
+    function fromShowdownHand(info) {
+      return {
+        top: info.top_cards || [],
+        middle: info.middle_cards || [],
+        bottom: info.bottom_cards || [],
+        pool: []
+      };
+    }
+
+    window.newRound = async function() {
+      closeModal("showdownModal");
+      await startRound();
+    }
+
+    window.resetToLobby = async function() {
+      closeModal("showdownModal");
+      await callRpc("reset_pusoy_lobby", {
+        p_room_code: me.roomCode,
+        p_player_token: me.token
+      });
+      await refreshState();
+    }
+
+    function renderHandLine(label, cards, name) {
+      return `
+        <div class="hand-row">
+          <div class="hand-label">${label}</div>
+          <div>
+            <div class="dropzone">${cards.map(cardHtml).join("")}</div>
+            <div class="hand-name">${name}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function openModal(id) { el(id).classList.add("active"); }
+    function closeModal(id) { el(id).classList.remove("active"); }
+
+    function cleanName(name) { return name.trim().slice(0, 24); }
+
+    function makeDeck() {
+      const deck = [];
+      for (const suit of suits) {
+        for (const rank of ranks) {
+          deck.push({
+            id: `${rank}${suit}-${Math.random().toString(36).slice(2, 9)}`,
+            rank,
+            suit,
+            value: rankValue[rank]
+          });
+        }
+      }
+      return deck;
+    }
+
+    function shuffle(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function sortCards(cards) {
+      return [...cards].sort((a, b) => b.value - a.value || a.suit.localeCompare(b.suit));
+    }
+
+    function renderCards(container, cards, draggable) {
+      container.innerHTML = "";
+      sortCards(cards).forEach(card => {
+        const div = document.createElement("div");
+        div.className = "playing-card" + (card.suit === "♥" || card.suit === "♦" ? " red" : "");
+        div.draggable = draggable;
+        div.dataset.id = card.id;
+        div.innerHTML = `<span class="rank">${card.rank}</span><span class="suit">${card.suit}</span>`;
+        if (draggable) {
+          div.addEventListener("dragstart", () => draggedId = card.id);
+        }
+        container.appendChild(div);
+      });
+    }
+
+    function cardHtml(card) {
+      return `<div class="playing-card ${card.suit === "♥" || card.suit === "♦" ? "red" : ""}">
+        <span class="rank">${card.rank}</span><span class="suit">${card.suit}</span>
+      </div>`;
+    }
+
+    function countsByRank(cards) {
+      const counts = {};
+      cards.forEach(c => counts[c.value] = (counts[c.value] || 0) + 1);
+      return counts;
+    }
+
+    function isStraight(values) {
+      const unique = [...new Set(values)].sort((a, b) => a - b);
+      if (unique.length !== 5) return { ok: false, high: Math.max(...values) };
+
+      const normal = unique.every((v, i) => i === 0 || v === unique[i - 1] + 1);
+      if (normal) return { ok: true, high: unique[4] };
+
+      const wheel = JSON.stringify(unique) === JSON.stringify([2,3,4,5,14]);
+      if (wheel) return { ok: true, high: 5 };
+
+      return { ok: false, high: Math.max(...values) };
+    }
+
+    function evaluate5(cards) {
+      if (cards.length !== 5) return { category: -1, name: "Incomplete", tiebreak: [] };
+
+      const values = cards.map(c => c.value);
+      const sorted = [...values].sort((a, b) => b - a);
+      const counts = countsByRank(cards);
+      const groups = Object.entries(counts)
+        .map(([value, count]) => ({ value: Number(value), count }))
+        .sort((a, b) => b.count - a.count || b.value - a.value);
+
+      const flush = cards.every(c => c.suit === cards[0].suit);
+      const straight = isStraight(values);
+
+      if (straight.ok && flush) return { category: 8, name: straight.high === 14 ? "Royal / Ace-high Straight Flush" : "Straight Flush", tiebreak: [straight.high] };
+      if (groups[0].count === 4) return { category: 7, name: "Four of a Kind", tiebreak: [groups[0].value, ...groups.filter(g => g.count === 1).map(g => g.value)] };
+      if (groups[0].count === 3 && groups[1].count === 2) return { category: 6, name: "Full House", tiebreak: [groups[0].value, groups[1].value] };
+      if (flush) return { category: 5, name: "Flush", tiebreak: sorted };
+      if (straight.ok) return { category: 4, name: "Straight", tiebreak: [straight.high] };
+      if (groups[0].count === 3) return { category: 3, name: "Three of a Kind", tiebreak: [groups[0].value, ...groups.filter(g => g.count === 1).map(g => g.value).sort((a,b)=>b-a)] };
+      if (groups[0].count === 2 && groups[1].count === 2) {
+        const pairs = groups.filter(g => g.count === 2).map(g => g.value).sort((a,b)=>b-a);
+        return { category: 2, name: "Two Pair", tiebreak: [...pairs, groups.find(g => g.count === 1).value] };
+      }
+      if (groups[0].count === 2) return { category: 1, name: "One Pair", tiebreak: [groups[0].value, ...groups.filter(g => g.count === 1).map(g => g.value).sort((a,b)=>b-a)] };
+      return { category: 0, name: "High Card", tiebreak: sorted };
+    }
+
+    function evaluate3(cards) {
+      if (cards.length !== 3) return { category: -1, name: "Incomplete", tiebreak: [] };
+
+      const values = cards.map(c => c.value).sort((a,b)=>b-a);
+      const groups = Object.entries(countsByRank(cards))
+        .map(([value, count]) => ({ value: Number(value), count }))
+        .sort((a,b)=>b.count - a.count || b.value - a.value);
+
+      if (groups[0].count === 3) return { category: 3, name: "Three of a Kind", tiebreak: [groups[0].value] };
+      if (groups[0].count === 2) return { category: 1, name: "One Pair", tiebreak: [groups[0].value, groups.find(g => g.count === 1).value] };
+      return { category: 0, name: "High Card", tiebreak: values };
+    }
+
+    function compareEval(a, b) {
+      if (a.category !== b.category) return a.category > b.category ? 1 : -1;
+      const len = Math.max(a.tiebreak.length, b.tiebreak.length);
+      for (let i = 0; i < len; i++) {
+        const av = a.tiebreak[i] || 0;
+        const bv = b.tiebreak[i] || 0;
+        if (av !== bv) return av > bv ? 1 : -1;
+      }
+      return 0;
+    }
+
+    function validateHand(hand) {
+      if (hand.top.length !== 3) return { ok: false, reason: "Top needs 3 cards." };
+      if (hand.middle.length !== 5) return { ok: false, reason: "Middle needs 5 cards." };
+      if (hand.bottom.length !== 5) return { ok: false, reason: "Bottom needs 5 cards." };
+      if (hand.pool.length !== 0) return { ok: false, reason: "You still have unplaced cards." };
+
+      const top = evaluate3(hand.top);
+      const middle = evaluate5(hand.middle);
+      const bottom = evaluate5(hand.bottom);
+
+      const topComparable = { category: top.category, tiebreak: top.tiebreak };
+      if (compareEval(bottom, middle) < 0) return { ok: false, reason: "Invalid: Bottom is weaker than Middle." };
+      if (compareEval(middle, topComparable) < 0) return { ok: false, reason: "Invalid: Middle is weaker than Top." };
+      return { ok: true, reason: "Valid." };
+    }
+
+    function handNameSummary(hand) {
+      if (!hand.top.length || !hand.middle.length || !hand.bottom.length) return "No hand";
+      return `${evaluate3(hand.top).name} / ${evaluate5(hand.middle).name} / ${evaluate5(hand.bottom).name}`;
+    }
+
+    function compareVsBanker(player, banker) {
+      const rows = [
+        { label: "Top", p: evaluate3(player.top), b: evaluate3(banker.top) },
+        { label: "Middle", p: evaluate5(player.middle), b: evaluate5(banker.middle) },
+        { label: "Bottom", p: evaluate5(player.bottom), b: evaluate5(banker.bottom) }
+      ];
+
+      let wins = 0;
+      let losses = 0;
+
+      const details = rows.map(row => {
+        const c = compareEval(row.p, row.b);
+        if (c > 0) wins++;
+        else if (c < 0) losses++;
+        return `${row.label}: ${c > 0 ? "Win" : c < 0 ? "Lose" : "Push"} — ${row.p.name} vs ${row.b.name}`;
+      });
+
+      let outcome = "Push";
+      let className = "push";
+
+      if (wins > losses) {
+        outcome = wins === 3 ? "Player scoops" : "Player wins";
+        className = "win";
+      } else if (losses > wins) {
+        outcome = losses === 3 ? "Banker scoops" : "Banker wins";
+        className = "loss";
+      }
+
+      return { outcome, className, details };
+    }
+
+    function autoArrange(cards) {
+      const sorted = sortCards(cards);
+      const attempts = [];
+
+      attempts.push({
+        pool: [],
+        bottom: sorted.slice(0,5),
+        middle: sorted.slice(5,10),
+        top: sorted.slice(10,13)
+      });
+
+      for (let i = 0; i < 1000; i++) {
+        const s = shuffle(cards);
+        attempts.push({
+          pool: [],
+          bottom: s.slice(0,5),
+          middle: s.slice(5,10),
+          top: s.slice(10,13)
+        });
+      }
+
+      let best = null;
+      let bestScore = -Infinity;
+
+      attempts.forEach(hand => {
+        if (!validateHand(hand).ok) return;
+        const score =
+          evaluate5(hand.bottom).category * 100000 +
+          evaluate5(hand.middle).category * 10000 +
+          evaluate3(hand.top).category * 1000 +
+          evaluate5(hand.bottom).tiebreak.reduce((a,b)=>a+b,0) * 4 +
+          evaluate5(hand.middle).tiebreak.reduce((a,b)=>a+b,0) * 2 +
+          evaluate3(hand.top).tiebreak.reduce((a,b)=>a+b,0);
+        if (score > bestScore) {
+          bestScore = score;
+          best = hand;
+        }
+      });
+
+      return best || { pool: [], bottom: sorted.slice(0,5), middle: sorted.slice(5,10), top: sorted.slice(10,13) };
+    }
+
+    function saveSession() {
+      if (!me) return;
+      localStorage.setItem("pusoy_online_session", JSON.stringify(me));
+    }
+
+    async function restoreSession() {
+      const raw = localStorage.getItem("pusoy_online_session");
+      if (!raw) return;
+      try {
+        me = JSON.parse(raw);
+        await refreshState();
+        subscribeToRoom();
+        goRoom();
+      } catch (err) {
+        console.warn("Could not restore session", err);
+        localStorage.removeItem("pusoy_online_session");
+      }
+    }
+  </script>
+</body>
+</html>
