@@ -1,2246 +1,809 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pusoy Online</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%99%A0%3C/text%3E%3C/svg%3E" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --bg: #f6f4ef;
-      --ink: #111111;
-      --muted: #6b7280;
-      --card: #ffffff;
-      --black: #050505;
-      --white: #ffffff;
-      --line: #e5e7eb;
-      --accent: #2563eb;
-      --good: #16a34a;
-      --bad: #dc2626;
-      --warn: #d97706;
-      --soft: #f3f4f6;
-      --shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
-      --radius: 24px;
+      --bg:      #f2f2f7;
+      --surface: #ffffff;
+      --surface2:#f7f7fa;
+      --border:  #dde0ea;
+      --text:    #0f0f1a;
+      --muted:   #8888a0;
+      --accent:  #cc0000;
+      --gold:    #b58900;
+      --gold-bg: #fdf6dc;
+      --gold-br: rgba(181,137,0,0.28);
+      --win:     #1a7a40;
+      --win-bg:  #e8f5ee;
+      --win-br:  rgba(26,122,64,0.28);
+      --bad:     #cc2200;
+      --bad-bg:  #fff0ee;
+      --bad-br:  rgba(204,34,0,0.28);
+      --blue:    #1e6ab0;
+      --shadow:  0 2px 12px rgba(0,0,0,0.08);
+      --r:       8px;
     }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background:
-        radial-gradient(circle at top left, rgba(37,99,235,0.08), transparent 34%),
-        radial-gradient(circle at bottom right, rgba(22,163,74,0.08), transparent 30%),
-        var(--bg);
-      color: var(--ink);
-      min-height: 100vh;
-    }
-    button, input, select { font: inherit; }
-    button {
-      border: 0;
-      border-radius: 14px;
-      padding: 11px 16px;
-      cursor: pointer;
-      background: var(--black);
-      color: var(--white);
-      font-weight: 700;
-      transition: transform 0.12s ease, opacity 0.12s ease;
-    }
-    button:hover { transform: translateY(-1px); }
-    button:disabled { opacity: 0.42; cursor: not-allowed; transform: none; }
-    button.secondary { background: #e5e7eb; color: #111827; }
-    button.good { background: var(--good); }
-    button.bad { background: var(--bad); }
-    input, select {
-      width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 12px 13px;
-      background: #fff;
-      outline: none;
-    }
-    input:focus, select:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
-    }
-    .app { max-width: 1220px; margin: 0 auto; padding: 22px; }
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 10px 0 18px;
-      flex-wrap: wrap;
+    [data-theme="dark"] {
+      --bg:      #0a0a0f;
+      --surface: #13131a;
+      --surface2:#17171f;
+      --border:  #1e1e2e;
+      --text:    #e8e8f0;
+      --muted:   #6b6b80;
+      --accent:  #cc0000;
+      --gold:    #e8b800;
+      --gold-bg: #2a2200;
+      --gold-br: rgba(232,184,0,0.22);
+      --win:     #3ecf7a;
+      --win-bg:  #0f2a1a;
+      --win-br:  rgba(62,207,122,0.22);
+      --bad:     #ef4444;
+      --bad-bg:  #2a0f0f;
+      --bad-br:  rgba(239,68,68,0.22);
+      --blue:    #3a8fd4;
+      --shadow:  0 2px 16px rgba(0,0,0,0.5);
     }
 
-    .header-actions {
-      display: flex;
-      gap: 10px;
-      align-items: flex-end;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      flex-direction: column;
-      margin-left: auto;
-    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;transition:background .25s,color .25s;}
+    button,input,select{font:inherit;}
 
-    .header-room-bar {
-      display: none;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      width: 100%;
-    }
+    /* ── HEADER ── */
+    header{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:10px 16px 0;transition:background .25s,border-color .25s;}
+    .hdr-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+    .brand{display:flex;align-items:center;gap:8px;}
+    .brand-suit{font-size:18px;color:var(--accent);}
+    .brand-name{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;letter-spacing:.08em;text-transform:uppercase;}
+    .brand-tag{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;background:var(--accent);color:#fff;padding:2px 7px;border-radius:2px;}
+    .hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 
-    .header-room-bar.active {
-      display: flex;
-    }
+    .chip{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);color:var(--muted);white-space:nowrap;}
+    .chip strong{color:var(--text);font-weight:700;}
+    .chip.gold{border-color:var(--gold-br);background:var(--gold-bg);color:var(--gold);}
+    .chip.gold strong{color:var(--gold);letter-spacing:.16em;}
 
-    .header-btns {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
+    .theme-btn{display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .15s;}
+    .theme-btn:hover{border-color:var(--text);color:var(--text);}
 
-    .compact-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      border-radius: 999px;
-      padding: 7px 11px;
-      background: #fff;
-      border: 1px solid var(--line);
-      font-size: 13px;
-      color: #374151;
-      white-space: nowrap;
-    }
+    .hdr-room{display:none;align-items:center;gap:8px;flex-wrap:wrap;}
+    .hdr-room.active{display:flex;}
 
-    .header-actions button {
-      padding: 9px 13px;
-      border-radius: 999px;
-      font-size: 13px;
-    }
-    .brand { display: flex; flex-direction: column; gap: 4px; }
-    .brand h1 { margin: 0; font-size: clamp(24px, 4vw, 38px); letter-spacing: -0.04em; }
-    .brand span { color: var(--muted); font-size: 14px; }
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      border-radius: 999px;
-      padding: 7px 11px;
-      background: #fff;
-      border: 1px solid var(--line);
-      font-size: 13px;
-      color: #374151;
-      white-space: nowrap;
-    }
-    .screen { display: none; }
-    .screen.active { display: block; }
-    .hero {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 18px;
-      align-items: stretch;
-      margin-top: 12px;
-    }
-    @media (min-width: 860px) { .hero { grid-template-columns: 1.1fr 0.9fr; } }
-    .panel {
-      background: rgba(255,255,255,0.88);
-      border: 1px solid rgba(229,231,235,0.9);
-      border-radius: var(--radius);
-      padding: 22px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-    }
-    .panel h2 { margin: 0 0 8px; font-size: 24px; letter-spacing: -0.03em; }
-    .panel p { color: var(--muted); line-height: 1.5; }
-    .form-grid { display: grid; gap: 12px; margin-top: 16px; }
-    .two { display: grid; grid-template-columns: 1fr; gap: 12px; }
-    @media (min-width: 680px) { .two { grid-template-columns: 1fr 1fr; } }
-    .room-layout { display: grid; gap: 28px; margin-top: 18px; }
-    .top-seats {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 28px;
-      justify-items: center;
-    }
-    .bottom-seats {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 28px;
-    }
-    @media (min-width: 760px) {
-      .top-seats { grid-template-columns: 1fr 1fr; padding: 0 18%; }
-      .bottom-seats { grid-template-columns: repeat(3, 1fr); }
-    }
-    .seat-card {
-      min-height: 178px;
-      width: 100%;
-      border-radius: 20px;
-      background: var(--black);
-      color: var(--white);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 18px;
-      text-align: center;
-      box-shadow: 0 16px 34px rgba(0,0,0,0.22);
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-    }
-    .seat-card:hover { outline: 4px solid rgba(37,99,235,0.18); }
-    .seat-title { font-size: clamp(25px, 3vw, 36px); line-height: 1.05; }
-    .seat-sub { margin-top: 10px; color: rgba(255,255,255,0.68); font-size: 14px; }
-    .seat-badge {
-      position: absolute;
-      top: 13px;
-      right: 13px;
-      font-size: 12px;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 999px;
-      padding: 6px 9px;
-    }
-    .seat-card.ready .seat-badge { background: rgba(22,163,74,0.25); color: #bbf7d0; }
-    .seat-card.empty { opacity: 0.56; }
-    .seat-card.me { outline: 4px solid rgba(37,99,235,0.38); }
+    /* ── BUTTONS ── */
+    .btn{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:7px 14px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;transition:all .15s;white-space:nowrap;}
+    .btn:hover{border-color:var(--text);}
+    .btn:disabled{opacity:.35;cursor:not-allowed;}
+    .btn:disabled:hover{border-color:var(--border);}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn-primary:hover{background:#a80000;border-color:#a80000;color:#fff;}
+    .btn-win{background:var(--win-bg);border-color:var(--win-br);color:var(--win);}
+    .btn-win:hover{background:var(--win);border-color:var(--win);color:#fff;}
+    .btn-bad{background:var(--bad-bg);border-color:var(--bad-br);color:var(--bad);}
+    .btn-bad:hover{background:var(--bad);border-color:var(--bad);color:#fff;}
+    .btn-ghost{background:transparent;border-color:var(--border);color:var(--muted);}
+    .btn-ghost:hover{border-color:var(--muted);color:var(--text);background:var(--surface2);}
 
-    .seat-card.revealed {
-      min-height: 330px;
-      justify-content: flex-start;
-      align-items: stretch;
-      text-align: left;
-    }
+    /* ── SCREENS ── */
+    .screen{display:none;}
+    .screen.active{display:block;}
 
-    .mini-backs,
-    .mini-cards {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-      justify-content: center;
-      margin-top: 12px;
-    }
+    /* ── PAGE WRAPPER ── */
+    .page{max-width:700px;margin:0 auto;padding:24px 16px;}
+    #roomScreen .page{max-width:1100px;}
 
-    .mini-card {
-      width: 27px;
-      height: 38px;
-      border-radius: 7px;
-      background: #fff;
-      color: #111827;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 900;
-      border: 1px solid rgba(255,255,255,0.3);
-      box-shadow: 0 5px 10px rgba(0,0,0,0.2);
-      position: relative;
-    }
+    /* ── SECTION LABEL ── */
+    .slabel{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+    .slabel::after{content:'';flex:1;height:1px;background:var(--border);}
 
-    .mini-card.red {
-      color: #dc2626;
-    }
+    /* ── CARD ── */
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);}
+    .card+.card{margin-top:12px;}
+    .card h2{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;}
+    .card p{color:var(--muted);font-size:14px;line-height:1.55;margin-bottom:16px;}
 
-    .mini-card.back {
-      background:
-        radial-gradient(circle at center, rgba(255,255,255,0.12) 0 18%, transparent 19%),
-        repeating-linear-gradient(45deg, rgba(255,255,255,0.08) 0 2px, transparent 2px 6px),
-        repeating-linear-gradient(-45deg, rgba(255,255,255,0.06) 0 2px, transparent 2px 6px),
-        linear-gradient(135deg, #1f3b7a, #0f172a);
-      border: 1px solid rgba(255,255,255,0.22);
-      box-shadow:
-        inset 0 0 0 2px rgba(255,255,255,0.09),
-        inset 0 0 0 4px rgba(0,0,0,0.15),
-        0 5px 10px rgba(0,0,0,0.2);
-    }
+    /* ── FORM ── */
+    .fstack{display:grid;gap:10px;}
+    .flabel{display:block;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+    input[type=text],input:not([type]),select{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface2);color:var(--text);font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s;}
+    input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(204,0,0,0.12);}
+    select option{background:var(--surface);color:var(--text);}
+    .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .join-expand{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-top:4px;}
+    .join-expand.active{display:grid;gap:10px;}
 
-    .main-arrange-board {
-      display: none !important;
-      background: rgba(255,255,255,0.9);
-      border: 1px solid var(--line);
-      border-radius: 24px;
-      padding: 18px;
-      margin-top: 22px;
-      box-shadow: var(--shadow);
-    }
+    /* ── HOW STEPS ── */
+    .steps{display:grid;}
+    .step{display:grid;grid-template-columns:32px 1fr;gap:12px;padding:13px 0;border-bottom:1px solid var(--border);align-items:start;}
+    .step:last-child{border-bottom:none;}
+    .step-num{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--accent);line-height:1;}
+    .step-title{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px;}
+    .step-desc{font-size:13px;color:var(--muted);line-height:1.45;}
 
-    .main-arrange-board.active {
-      display: block;
-    }
+    /* ── SEAT GRID ── */
+    .seat-grid{display:grid;gap:10px;margin-top:20px;}
+    .seat-row-top{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .seat-row-bottom{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+    @media(max-width:760px){.seat-row-top,.seat-row-bottom{grid-template-columns:1fr;}}
 
-    .main-arrange-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-      margin-bottom: 14px;
-    }
+    .seat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:border-color .15s,box-shadow .15s;min-height:110px;position:relative;display:flex;flex-direction:column;}
+    .seat-card:hover{border-color:var(--muted);box-shadow:var(--shadow);}
+    .seat-card.me{border-color:var(--gold-br);background:var(--gold-bg);}
+    .seat-card.me:hover{border-color:var(--gold);}
+    .seat-card.empty{opacity:.5;}
+    .seat-card.ready{border-color:var(--win-br);background:var(--win-bg);}
+    #seat-scoring{border-left:3px solid var(--accent);}
 
-    .main-arrange-head h2 {
-      margin: 0;
-      font-size: clamp(22px, 3vw, 34px);
-      letter-spacing: -0.04em;
-    }
+    .seat-top-row-meta{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+    .seat-role{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);}
+    .sbadge{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:2px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);}
+    .sbadge.host{border-color:var(--gold-br);background:var(--gold-bg);color:var(--gold);}
+    .sbadge.ready{border-color:var(--win-br);background:var(--win-bg);color:var(--win);}
+    .sbadge.you{border-color:var(--gold-br);background:var(--gold-bg);color:var(--gold);}
+    .sbadge.live{border-color:rgba(204,0,0,0.3);background:rgba(204,0,0,0.08);color:var(--accent);}
 
-    .main-arrange-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
+    .seat-name{font-family:'Barlow Condensed',sans-serif;font-size:clamp(20px,2.2vw,30px);font-weight:900;letter-spacing:.04em;text-transform:uppercase;line-height:1;margin-bottom:3px;}
+    .seat-status{font-size:12px;color:var(--muted);line-height:1.4;}
 
-    .main-arrange-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-    }
+    /* scoring card accent name */
+    #seat-scoring .seat-name{color:var(--accent);}
 
-    @media (min-width: 980px) {
-      .main-arrange-grid {
-        grid-template-columns: 1.15fr 0.85fr;
-      }
-    }
+    /* ── STATUS BAR ── */
+    .status-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:11px 14px;font-size:13px;color:var(--muted);line-height:1.5;}
+    .status-bar strong{color:var(--text);}
 
-    .main-dropzone {
-      min-height: 96px;
-      border: 2px dashed #d1d5db;
-      border-radius: 18px;
-      padding: 10px;
-      background: #fff;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: flex-start;
-    }
+    /* ── INLINE MINI HANDS ── */
+    .inline-hand{margin-top:10px;display:grid;gap:5px;width:100%;}
+    .inline-row{background:rgba(0,0,0,0.03);border:1px solid var(--border);border-radius:4px;padding:6px 8px;}
+    [data-theme="dark"] .inline-row{background:rgba(255,255,255,0.025);}
+    .inline-row-title{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;display:flex;justify-content:space-between;}
+    .inline-row-title span:last-child{color:var(--gold);}
+    .mini-backs,.mini-cards{display:flex;flex-wrap:wrap;gap:3px;}
+    .mini-card{width:22px;height:30px;border-radius:3px;background:#fff;color:#111;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;font-family:'Barlow Condensed',sans-serif;border:1px solid rgba(0,0,0,0.1);box-shadow:0 2px 5px rgba(0,0,0,0.18);}
+    .mini-card.red{color:#cc0000;}
+    .mini-card.back{background:linear-gradient(135deg,#1a2744,#0a0f1e);border:1px solid rgba(255,255,255,0.1);}
 
-    .main-dropzone.hover {
-      border-color: var(--accent);
-      background: rgba(37,99,235,0.08);
-    }
+    /* ── INLINE RESULTS ── */
+    .inline-results{display:grid;gap:5px;margin-top:8px;}
+    .inline-result-item{background:rgba(0,0,0,0.03);border:1px solid var(--border);border-radius:4px;padding:6px 9px;font-size:11px;color:var(--muted);line-height:1.45;}
+    [data-theme="dark"] .inline-result-item{background:rgba(255,255,255,0.025);}
 
-    .main-card-pool {
-      min-height: 230px;
-    }
+    /* ── ARRANGE BOARD (inline below seats) ── */
+    .arrange-board{display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-top:10px;overflow:hidden;}
+    .arrange-board.active{display:block;}
+    .arrange-board-hdr{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:13px 16px;border-bottom:1px solid var(--border);}
+    .arrange-board-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;}
+    .arrange-board-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+    .arrange-actions{display:flex;gap:8px;flex-wrap:wrap;}
+    .arrange-body{display:grid;grid-template-columns:1.2fr 0.8fr;}
+    @media(max-width:900px){.arrange-body{grid-template-columns:1fr;}}
+    .arrange-col{padding:14px 16px;}
+    .arrange-col+.arrange-col{border-left:1px solid var(--border);}
+    .hand-row{display:grid;grid-template-columns:70px 1fr;gap:10px;margin-bottom:12px;align-items:start;}
+    .hand-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding-top:12px;line-height:1.6;}
+    .main-dropzone{min-height:76px;border:1px dashed var(--border);border-radius:var(--r);padding:8px;background:var(--surface2);display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;transition:border-color .15s,background .15s;}
+    .main-dropzone.hover,.dropzone.hover{border-color:var(--accent);background:rgba(204,0,0,0.04);}
+    .main-card-pool{min-height:180px;}
+    .hand-name{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-top:4px;}
+    .pool-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+    .arrange-note{margin-top:10px;padding:8px 11px;border-radius:var(--r);background:var(--surface2);border:1px solid var(--border);font-size:12px;color:var(--muted);line-height:1.5;}
+    .tap-hint{font-size:11px;color:var(--muted);margin-top:2px;}
 
-    .main-card-selected {
-      outline: 4px solid rgba(37,99,235,0.35);
-      transform: translateY(-4px);
-    }
+    /* ── PLAYING CARDS ── */
+    .playing-card{width:48px;height:66px;border-radius:6px;background:#fff;color:#111;border:1px solid rgba(0,0,0,0.08);box-shadow:0 4px 12px rgba(0,0,0,0.18);display:flex;align-items:center;justify-content:center;position:relative;font-weight:800;cursor:grab;user-select:none;transition:transform .1s,box-shadow .1s;flex-shrink:0;}
+    .playing-card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,0.25);}
+    .playing-card.red{color:#cc0000;}
+    .playing-card .rank{font-size:16px;font-family:'Barlow Condensed',sans-serif;font-weight:900;}
+    .playing-card .suit{position:absolute;right:5px;bottom:4px;font-size:12px;}
+    .playing-card.main-card-selected{outline:2px solid var(--accent);transform:translateY(-5px);box-shadow:0 0 0 3px rgba(204,0,0,0.15),0 8px 20px rgba(0,0,0,0.25);}
 
-    .tap-hint {
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.4;
-      margin-top: 8px;
-    }
+    /* seat playing cards */
+    .seat-playing-card{width:34px;height:47px;border-radius:4px;background:#fff;color:#111;border:1px solid rgba(0,0,0,0.08);box-shadow:0 3px 8px rgba(0,0,0,0.18);display:flex;align-items:center;justify-content:center;position:relative;font-weight:800;cursor:grab;user-select:none;font-family:'Barlow Condensed',sans-serif;transition:transform .1s;flex-shrink:0;}
+    .seat-playing-card.red{color:#cc0000;}
+    .seat-playing-card .rank{font-size:13px;font-weight:900;}
+    .seat-playing-card .suit{position:absolute;right:3px;bottom:3px;font-size:9px;}
+    .seat-playing-card:hover{transform:translateY(-2px);}
+    .seat-playing-card.selected{outline:2px solid var(--accent);transform:translateY(-4px);}
 
+    /* ── SEAT ARRANGE (inline in seat card) ── */
+    .seat-arrange-wrap{margin-top:8px;display:grid;gap:6px;width:100%;}
+    .seat-arrange-zone{background:rgba(0,0,0,0.02);border:1px solid var(--border);border-radius:5px;padding:7px;}
+    [data-theme="dark"] .seat-arrange-zone{background:rgba(255,255,255,0.02);}
+    .seat-arrange-zone.drop-hover{border-color:var(--accent);background:rgba(204,0,0,0.04);}
+    .seat-arrange-label{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;display:flex;justify-content:space-between;}
+    .seat-arrange-label span:last-child{color:var(--gold);}
+    .seat-arrange-cards{min-height:50px;display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start;}
+    .seat-arrange-pool .seat-arrange-cards{min-height:72px;}
+    .seat-arrange-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;}
+    .seat-arrange-actions .btn{font-size:11px;padding:5px 10px;}
+    .seat-arrange-note{margin-top:5px;font-size:11px;color:var(--muted);padding:5px 8px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);}
+    .seat-card.arrange-mode{min-height:460px;cursor:default;}
+    .seat-card.arrange-mode:hover{border-color:var(--gold-br);}
+    .seat-card.revealed{min-height:220px;cursor:default;}
 
-    .seat-arrange-wrap {
-      margin-top: 12px;
-      display: grid;
-      gap: 10px;
-      width: 100%;
-    }
+    /* ── MODALS ── */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:200;backdrop-filter:blur(3px);}
+    .modal.active{display:flex;}
+    .modal-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;width:min(800px,100%);max-height:88vh;overflow:auto;box-shadow:0 24px 80px rgba(0,0,0,0.4);}
+    .modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+    .modal-head h2{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;}
+    .modal-arrange-grid{display:grid;grid-template-columns:1.2fr 0.8fr;gap:18px;}
+    @media(max-width:680px){.modal-arrange-grid{grid-template-columns:1fr;}}
+    .dropzone{min-height:80px;border:1px dashed var(--border);border-radius:var(--r);padding:8px;background:var(--surface2);display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;transition:border-color .15s,background .15s;}
 
-    .seat-arrange-zone {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.13);
-      border-radius: 12px;
-      padding: 8px;
-      width: 100%;
-    }
-
-    .seat-arrange-zone.drop-hover {
-      border-color: rgba(96,165,250,0.75);
-      background: rgba(37,99,235,0.14);
-    }
-
-    .seat-arrange-label {
-      font-size: 11px;
-      color: rgba(255,255,255,0.72);
-      margin-bottom: 6px;
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .seat-arrange-cards {
-      min-height: 58px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: flex-start;
-    }
-
-    .seat-arrange-pool .seat-arrange-cards {
-      min-height: 96px;
-    }
-
-    .seat-arrange-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 2px;
-    }
-
-    .seat-arrange-actions button {
-      padding: 8px 10px;
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .seat-arrange-note {
-      background: rgba(255,247,237,0.95);
-      border: 1px solid rgba(253,186,116,0.7);
-      color: #9a3412;
-      border-radius: 12px;
-      padding: 10px;
-      font-size: 12px;
-      line-height: 1.35;
-      margin-top: 4px;
-    }
-
-    .seat-card.arrange-mode {
-      min-height: 560px;
-      justify-content: flex-start;
-      align-items: stretch;
-      text-align: left;
-    }
-
-    .seat-card.arrange-mode .seat-title {
-      margin-bottom: 4px;
-    }
-
-    .seat-card.arrange-mode .seat-sub {
-      width: 100%;
-    }
-
-    .seat-playing-card {
-      width: 42px;
-      height: 56px;
-      border-radius: 10px;
-      background: #fff;
-      color: #111827;
-      border: 1px solid #e5e7eb;
-      box-shadow: 0 8px 18px rgba(0,0,0,0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      font-weight: 900;
-      cursor: grab;
-      user-select: none;
-      font-size: 18px;
-    }
-
-    .seat-playing-card.red {
-      color: #dc2626;
-    }
-
-    .seat-playing-card .suit {
-      position: absolute;
-      right: 5px;
-      bottom: 4px;
-      font-size: 12px;
-    }
-
-    .seat-playing-card.selected {
-      outline: 3px solid rgba(96,165,250,0.75);
-      transform: translateY(-3px);
-    }
-
-    @media (max-width: 980px) {
-      .seat-card.arrange-mode {
-        min-height: 0;
-      }
-    }
-
-    .main-arrange-note {
-      background: #fff7ed;
-      border: 1px solid #fed7aa;
-      color: #9a3412;
-      border-radius: 16px;
-      padding: 12px;
-      margin-top: 12px;
-      font-size: 13px;
-      line-height: 1.4;
-    }
-
-    .inline-hand {
-      margin-top: 12px;
-      display: grid;
-      gap: 8px;
-      width: 100%;
-    }
-
-    .inline-row {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.13);
-      border-radius: 12px;
-      padding: 8px;
-      width: 100%;
-    }
-
-    .inline-row-title {
-      font-size: 11px;
-      color: rgba(255,255,255,0.72);
-      margin-bottom: 6px;
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .inline-results {
-      display: grid;
-      gap: 8px;
-      text-align: left;
-      margin-top: 12px;
-      font-size: 12px;
-      color: rgba(255,255,255,0.75);
-    }
-
-    .inline-result-item {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.13);
-      border-radius: 12px;
-      padding: 8px;
-      line-height: 1.35;
-    }
-    .room-tools {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 18px;
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 12px;
-    }
-    .tool-left, .tool-right { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-    .code { font-weight: 900; letter-spacing: 0.12em; font-size: 18px; }
-    .status-box {
-      margin-top: 16px;
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 14px;
-      color: #374151;
-      line-height: 1.45;
-    }
-    .arrange-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 18px;
-      margin-top: 16px;
-    }
-    @media (min-width: 980px) { .arrange-grid { grid-template-columns: 1.1fr 0.9fr; } }
-    .hand-row {
-      display: grid;
-      grid-template-columns: 78px 1fr;
-      gap: 10px;
-      margin: 10px 0;
-      align-items: start;
-    }
-    .hand-label { color: var(--muted); font-size: 13px; padding-top: 14px; line-height: 1.25; }
-    .dropzone {
-      min-height: 80px;
-      border: 2px dashed #d1d5db;
-      border-radius: 18px;
-      padding: 10px;
-      background: #fff;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: flex-start;
-    }
-    .dropzone.hover { border-color: var(--accent); background: rgba(37,99,235,0.08); }
-    .playing-card {
-      width: 52px;
-      height: 70px;
-      border-radius: 12px;
-      background: #fff;
-      color: #111827;
-      border: 1px solid #e5e7eb;
-      box-shadow: 0 8px 18px rgba(0,0,0,0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      font-weight: 900;
-      cursor: grab;
-      user-select: none;
-    }
-    .playing-card.red { color: #dc2626; }
-    .playing-card .rank { font-size: 18px; }
-    .playing-card .suit { position: absolute; right: 7px; bottom: 5px; font-size: 15px; }
-    .hand-name { margin-top: 5px; color: var(--accent); font-size: 12px; font-weight: 700; }
-    .small { color: var(--muted); font-size: 13px; }
-    .result-list { display: grid; gap: 10px; margin-top: 14px; }
-    .result-card {
-      border: 1px solid var(--line);
-      background: #fff;
-      border-radius: 18px;
-      padding: 14px;
-    }
-    .result-card h3 { margin: 0 0 8px; }
-    .win { color: var(--good); font-weight: 900; }
-    .loss { color: var(--bad); font-weight: 900; }
-    .push { color: var(--warn); font-weight: 900; }
-    .modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.45);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-      z-index: 50;
-    }
-    .modal.active { display: flex; }
-    .modal-card {
-      background: #fff;
-      border-radius: 24px;
-      padding: 20px;
-      width: min(760px, 100%);
-      max-height: 88vh;
-      overflow: auto;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.35);
-    }
-    .modal-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    .modal-head h2 { margin: 0; }
-    .xbtn { background: #f3f4f6; color: #111827; padding: 8px 12px; }
-    .reveal-hand {
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 12px;
-      margin: 10px 0;
-      background: #fafafa;
-    }
-    .note {
-      background: #fff7ed;
-      border: 1px solid #fed7aa;
-      color: #9a3412;
-      border-radius: 16px;
-      padding: 12px;
-      margin-top: 12px;
-      font-size: 13px;
-      line-height: 1.4;
-    }
-    .schema {
-      white-space: pre-wrap;
-      background: #111827;
-      color: #e5e7eb;
-      border-radius: 18px;
-      padding: 14px;
-      overflow: auto;
-      font-size: 12px;
-      line-height: 1.5;
-    }
+    /* ── SHOWDOWN ── */
+    .result-list{display:grid;gap:10px;margin-top:10px;}
+    .reveal-hand{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px;}
+    .reveal-hand h3{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;}
+    .result-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px;}
+    .result-card h3{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;}
+    .sd-heading{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;margin:18px 0 8px;color:var(--text);}
+    .win{color:var(--win);font-weight:700;}
+    .loss{color:var(--bad);font-weight:700;}
+    .push{color:var(--gold);font-weight:700;}
+    .small-text{font-size:12px;color:var(--muted);line-height:1.55;}
+    .note{background:var(--gold-bg);border:1px solid var(--gold-br);color:var(--gold);border-radius:var(--r);padding:10px 12px;margin-top:10px;font-size:12px;line-height:1.5;}
+    .slabel-inner{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
   </style>
 </head>
 <body>
-  <div class="app">
-    <div class="topbar">
-      <div class="brand">
-        <h1>♠ Pusoy Online</h1>
-      </div>
-      <div class="header-actions">
-        <div id="headerRoomBar" class="header-room-bar">
-          <span class="compact-pill">Room: <strong id="roomCodeDisplayHeader" class="code"></strong></span>
-          <span class="compact-pill">You are: <strong id="mySeatDisplayHeader"></strong></span>
-          <span class="compact-pill">Status: <strong id="roomStatusDisplayHeader"></strong></span>
 
-          <div class="header-btns">
-            <button id="headerNewDealBtn" class="good" style="display:none">New Deal</button>
-            <button id="headerBackLobbyBtn" class="secondary" style="display:none">Back to Lobby</button>
-            <button id="headerResetDbBtn" class="bad" style="display:none">Reset DB</button>
-            <button id="copyCodeBtn">Copy Code</button>
-            <button id="leaveBtn" class="secondary">Leave</button>
-          </div>
+  <header>
+    <div class="hdr-top">
+      <div class="brand">
+        <span class="brand-suit">♠</span>
+        <span class="brand-name">Pusoy Online</span>
+        <span class="brand-tag">Live</span>
+      </div>
+
+      <div class="hdr-right">
+        <div id="headerRoomBar" class="hdr-room">
+          <span class="chip gold">Room&nbsp;<strong id="roomCodeDisplayHeader"></strong></span>
+          <span class="chip">You:&nbsp;<strong id="mySeatDisplayHeader"></strong></span>
+          <span class="chip">Status:&nbsp;<strong id="roomStatusDisplayHeader"></strong></span>
+          <button class="btn btn-win" id="headerNewDealBtn" style="display:none">New Deal</button>
+          <button class="btn btn-ghost" id="headerBackLobbyBtn" style="display:none">Reset Lobby</button>
+          <button class="btn btn-bad" id="headerResetDbBtn" style="display:none">Reset DB</button>
+          <button class="btn btn-ghost" id="copyCodeBtn">Copy Code</button>
+          <button class="btn btn-ghost" id="leaveBtn">Leave</button>
         </div>
-        <div class="pill" id="modePill" style="display:none"></div>
+        <button class="theme-btn" id="themeBtn">
+          <span id="themeIcon">☀️</span>
+          <span id="themeLabel">Light</span>
+        </button>
       </div>
     </div>
+  </header>
 
-    <section id="homeScreen" class="screen active">
-      <div class="hero">
-        <div class="panel">
-          <h2>Create or join a room</h2>
-          <p>
-            Banker creates a room. Players join with the 4-digit code. Each player only receives their own cards before showdown.
-          </p>
-
-          <div class="form-grid">
-            <label>
-              <span class="small">Your name</span>
-              <input id="nameInput" placeholder="Required. Example: Dad, Kuya, Player 1" required />
-            </label>
-
-            <div class="two">
-              <button id="createRoomBtn">Create Room as Banker</button>
-              <button id="joinRoomOpenBtn" class="secondary">Join Room as Player</button>
-            </div>
-
-            <div id="joinBox" style="display:none" class="form-grid">
-              <label>
-                <span class="small">Room code</span>
-                <input id="roomCodeInput" placeholder="Example: 4821" />
-              </label>
-              <label>
-                <span class="small">Choose seat</span>
-                <select id="seatSelect">
-                  <option value="player1">Player 1</option>
-                  <option value="player2">Player 2</option>
-                  <option value="player3">Player 3</option>
-                </select>
-              </label>
-              <button id="joinRoomBtn">Join Room</button>
-            </div>
+  <!-- HOME -->
+  <section id="homeScreen" class="screen active">
+    <div class="page">
+      <div style="margin-top:8px"><div class="slabel">Play</div></div>
+      <div class="card">
+        <h2>Create or Join a Room</h2>
+        <p>Banker creates the room and shares the 4-digit code. Cards are private until everyone submits at showdown.</p>
+        <div class="fstack">
+          <div>
+            <label class="flabel">Your name</label>
+            <input id="nameInput" type="text" placeholder="e.g. Dad, Kuya, Player 1" />
           </div>
-
-
-        </div>
-
-        <div class="panel">
-          <h2>How it works</h2>
-          <p>Cards and submitted hands are stored in Supabase. Room updates are synced using Supabase Realtime events.</p>
-          <div class="schema">Flow:
-
-1. Banker creates room
-2. Kids join with room code
-3. Banker starts round
-4. Each browser fetches its own cards
-5. Players submit Top / Middle / Bottom
-6. Banker reveals showdown
-7. Everyone sees final hands and scoring</div>
-        </div>
-      </div>
-    </section>
-
-    <section id="roomScreen" class="screen">
-<div class="tool-right">
-          <button id="copyCodeBtn" class="secondary">Copy Code</button>
-          <button id="leaveBtn" class="secondary">Leave</button>
+          <div class="btn-row">
+            <button class="btn btn-primary" id="createRoomBtn">Create as Banker</button>
+            <button class="btn" id="joinRoomOpenBtn">Join Room ▾</button>
+          </div>
+          <div id="joinBox" class="join-expand">
+            <div>
+              <label class="flabel">Room code</label>
+              <input id="roomCodeInput" type="text" placeholder="e.g. 4821" />
+            </div>
+            <div>
+              <label class="flabel">Choose seat</label>
+              <select id="seatSelect">
+                <option value="player1">Player 1</option>
+                <option value="player2">Player 2</option>
+                <option value="player3">Player 3</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" id="joinRoomBtn">Join Room</button>
+          </div>
         </div>
       </div>
 
-      <div class="room-layout">
-        <div class="top-seats">
+      <div style="margin-top:20px"><div class="slabel">How It Works</div></div>
+      <div class="card">
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div><div><div class="step-title">Banker creates room</div><div class="step-desc">Gets a 4-digit code to share with players</div></div></div>
+          <div class="step"><div class="step-num">2</div><div><div class="step-title">Players join</div><div class="step-desc">Each player opens the link in their own browser and enters the code</div></div></div>
+          <div class="step"><div class="step-num">3</div><div><div class="step-title">Banker starts the deal</div><div class="step-desc">13 cards are dealt privately to each joined player</div></div></div>
+          <div class="step"><div class="step-num">4</div><div><div class="step-title">Arrange and submit</div><div class="step-desc">Each player places cards into Top (3), Middle (5), Bottom (5). Hidden until showdown.</div></div></div>
+          <div class="step"><div class="step-num">5</div><div><div class="step-title">Showdown</div><div class="step-desc">Banker reveals all hands. Top / Middle / Bottom scored automatically vs banker.</div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROOM -->
+  <section id="roomScreen" class="screen">
+    <div class="page">
+      <div class="seat-grid">
+        <div class="seat-row-top">
           <div class="seat-card" id="seat-banker" data-seat="banker">
-            <div class="seat-badge">Host</div>
-            <div class="seat-title">Banker</div>
-            <div class="seat-sub">Empty</div>
+            <div class="seat-top-row-meta">
+              <span class="seat-role">Banker · Host</span>
+              <span class="sbadge host" id="badgeBanker">Host</span>
+            </div>
+            <div class="seat-name" id="nameBanker">Banker</div>
+            <div class="seat-status" id="statusBanker">Empty</div>
           </div>
-
           <div class="seat-card" id="seat-scoring" data-seat="scoring">
-            <div class="seat-badge">Control</div>
-            <div class="seat-title">Scoring</div>
-            <div class="seat-sub">Waiting for room</div>
+            <div class="seat-top-row-meta">
+              <span class="seat-role">Scoring</span>
+              <span class="sbadge live" id="badgeScoring">Control</span>
+            </div>
+            <div class="seat-name" id="nameScoring">Scoring</div>
+            <div class="seat-status" id="statusScoring">Waiting for room</div>
           </div>
         </div>
-
-        <div class="bottom-seats">
+        <div class="seat-row-bottom">
           <div class="seat-card" id="seat-player1" data-seat="player1">
-            <div class="seat-badge">Seat</div>
-            <div class="seat-title">Player 1</div>
-            <div class="seat-sub">Empty</div>
+            <div class="seat-top-row-meta"><span class="seat-role">Seat 1</span><span class="sbadge" id="badgePlayer1">Empty</span></div>
+            <div class="seat-name" id="namePlayer1">Player 1</div>
+            <div class="seat-status" id="statusPlayer1">Empty</div>
           </div>
-
           <div class="seat-card" id="seat-player2" data-seat="player2">
-            <div class="seat-badge">Seat</div>
-            <div class="seat-title">Player 2</div>
-            <div class="seat-sub">Empty</div>
+            <div class="seat-top-row-meta"><span class="seat-role">Seat 2</span><span class="sbadge" id="badgePlayer2">Empty</span></div>
+            <div class="seat-name" id="namePlayer2">Player 2</div>
+            <div class="seat-status" id="statusPlayer2">Empty</div>
           </div>
-
           <div class="seat-card" id="seat-player3" data-seat="player3">
-            <div class="seat-badge">Seat</div>
-            <div class="seat-title">Player 3</div>
-            <div class="seat-sub">Empty</div>
+            <div class="seat-top-row-meta"><span class="seat-role">Seat 3</span><span class="sbadge" id="badgePlayer3">Empty</span></div>
+            <div class="seat-name" id="namePlayer3">Player 3</div>
+            <div class="seat-status" id="statusPlayer3">Empty</div>
           </div>
         </div>
       </div>
 
-      <div id="mainArrangeBoard" class="main-arrange-board">
-        <div class="main-arrange-head">
+      <div class="status-bar" id="roomMessage">Connecting...</div>
+
+      <div id="mainArrangeBoard" class="arrange-board">
+        <div class="arrange-board-hdr">
           <div>
-            <h2 id="mainArrangeTitle">Arrange Your Cards</h2>
-            <div class="tap-hint">Tip: drag cards, or tap a card then tap Top / Middle / Bottom.</div>
+            <div class="arrange-board-title" id="mainArrangeTitle">Arrange Your Cards</div>
+            <div class="tap-hint">Tap a card then tap a row, or drag and drop.</div>
           </div>
-          <div class="main-arrange-actions">
-            <button id="mainAutoArrangeBtn" class="secondary">Auto Arrange</button>
-            <button id="mainClearLayoutBtn" class="secondary">Clear Layout</button>
-            <button id="mainSubmitHandBtn" class="good">Submit Hand</button>
+          <div class="arrange-actions">
+            <button class="btn btn-ghost" id="mainAutoArrangeBtn">Auto Arrange</button>
+            <button class="btn btn-ghost" id="mainClearLayoutBtn">Clear</button>
+            <button class="btn btn-win" id="mainSubmitHandBtn">Submit Hand</button>
           </div>
         </div>
-
-        <div class="main-arrange-grid">
-          <div>
+        <div class="arrange-body">
+          <div class="arrange-col">
             <div class="hand-row">
-              <div class="hand-label">Top<br>3 cards</div>
+              <div class="hand-label">TOP<br>3 cards</div>
               <div>
                 <div class="main-dropzone" data-main-zone="top" data-limit="3"></div>
                 <div class="hand-name" id="mainTopName"></div>
               </div>
             </div>
-
             <div class="hand-row">
-              <div class="hand-label">Middle<br>5 cards</div>
+              <div class="hand-label">MID<br>5 cards</div>
               <div>
                 <div class="main-dropzone" data-main-zone="middle" data-limit="5"></div>
                 <div class="hand-name" id="mainMiddleName"></div>
               </div>
             </div>
-
             <div class="hand-row">
-              <div class="hand-label">Bottom<br>5 cards</div>
+              <div class="hand-label">BTM<br>5 cards</div>
               <div>
                 <div class="main-dropzone" data-main-zone="bottom" data-limit="5"></div>
                 <div class="hand-name" id="mainBottomName"></div>
               </div>
             </div>
           </div>
-
-          <div>
-            <div class="small">Unplaced cards</div>
+          <div class="arrange-col">
+            <div class="pool-label">Unplaced Cards</div>
             <div class="main-dropzone main-card-pool" data-main-zone="pool" data-limit="13"></div>
-            <div class="main-arrange-note" id="mainArrangeNote"></div>
+            <div class="arrange-note" id="mainArrangeNote">Place all 13 cards into Top (3), Middle (5), and Bottom (5).</div>
           </div>
         </div>
       </div>
+    </div>
+  </section>
 
-      <div class="status-box" id="roomMessage"></div>
-    </section>
-  </div>
-
+  <!-- ARRANGE MODAL -->
   <div class="modal" id="arrangeModal">
     <div class="modal-card">
       <div class="modal-head">
         <h2 id="arrangeTitle">Arrange Cards</h2>
-        <button class="xbtn" id="closeArrangeBtn">Close</button>
+        <button class="btn btn-ghost" id="closeArrangeBtn">✕ Close</button>
       </div>
-
-      <div class="arrange-grid">
+      <div class="modal-arrange-grid">
         <div>
-          <div class="hand-row">
-            <div class="hand-label">Top<br>3 cards</div>
-            <div>
-              <div class="dropzone" data-zone="top" data-limit="3"></div>
-              <div class="hand-name" id="topName"></div>
-            </div>
-          </div>
-
-          <div class="hand-row">
-            <div class="hand-label">Middle<br>5 cards</div>
-            <div>
-              <div class="dropzone" data-zone="middle" data-limit="5"></div>
-              <div class="hand-name" id="middleName"></div>
-            </div>
-          </div>
-
-          <div class="hand-row">
-            <div class="hand-label">Bottom<br>5 cards</div>
-            <div>
-              <div class="dropzone" data-zone="bottom" data-limit="5"></div>
-              <div class="hand-name" id="bottomName"></div>
-            </div>
-          </div>
+          <div class="hand-row"><div class="hand-label">TOP<br>3 cards</div><div><div class="dropzone" data-zone="top" data-limit="3"></div><div class="hand-name" id="topName"></div></div></div>
+          <div class="hand-row"><div class="hand-label">MID<br>5 cards</div><div><div class="dropzone" data-zone="middle" data-limit="5"></div><div class="hand-name" id="middleName"></div></div></div>
+          <div class="hand-row"><div class="hand-label">BTM<br>5 cards</div><div><div class="dropzone" data-zone="bottom" data-limit="5"></div><div class="hand-name" id="bottomName"></div></div></div>
         </div>
-
         <div>
-          <div class="small">Unplaced cards</div>
-          <div class="dropzone" data-zone="pool" data-limit="13" style="min-height:220px"></div>
-          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
-            <button id="autoArrangeBtn" class="secondary">Auto Arrange</button>
-            <button id="clearLayoutBtn" class="secondary">Clear Layout</button>
-            <button id="submitHandBtn" class="good">Submit Hand</button>
+          <div class="slabel-inner">Unplaced Cards</div>
+          <div class="dropzone" data-zone="pool" data-limit="13" style="min-height:200px"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+            <button class="btn btn-ghost" id="autoArrangeBtn">Auto Arrange</button>
+            <button class="btn btn-ghost" id="clearLayoutBtn">Clear</button>
+            <button class="btn btn-win" id="submitHandBtn">Submit Hand</button>
           </div>
-          <div class="note" id="arrangeNote">
-            After you submit, your hand stays hidden until everyone is ready for showdown.
-          </div>
+          <div class="note" id="arrangeNote">Submit your hand. It stays hidden until showdown.</div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- SHOWDOWN MODAL -->
   <div class="modal" id="showdownModal">
     <div class="modal-card">
       <div class="modal-head">
         <h2>Showdown</h2>
-        <button class="xbtn" id="closeShowdownBtn">Close</button>
+        <button class="btn btn-ghost" id="closeShowdownBtn">✕ Close</button>
       </div>
       <div id="showdownContent"></div>
     </div>
   </div>
 
   <script>
-    const SUPABASE_URL = "https://kappyxsapcrldmfpswbx.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImthcHB5eHNhcGNybGRtZnBzd2J4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNjI0MzYsImV4cCI6MjA4OTkzODQzNn0.BWBia4jtkXIFtpn2au0X4Wdcvg4faqjc_93wXWlO_w4";
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // theme
+    const themeBtn=document.getElementById('themeBtn'),themeIcon=document.getElementById('themeIcon'),themeLabel=document.getElementById('themeLabel');
+    let isDark=true;
+    function applyTheme(d){document.documentElement.setAttribute('data-theme',d?'dark':'light');themeIcon.textContent=d?'☀️':'🌙';themeLabel.textContent=d?'Light':'Dark';}
+    applyTheme(isDark);
+    themeBtn.addEventListener('click',()=>{isDark=!isDark;applyTheme(isDark);});
 
-    const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
-    const suits = ["♠", "♥", "♦", "♣"];
-    const rankValue = Object.fromEntries(ranks.map((r, i) => [r, i + 2]));
+    // game
+    const SUPABASE_URL="https://kappyxsapcrldmfpswbx.supabase.co";
+    const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImthcHB5eHNhcGNybGRtZnBzd2J4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNjI0MzYsImV4cCI6MjA4OTkzODQzNn0.BWBia4jtkXIFtpn2au0X4Wdcvg4faqjc_93wXWlO_w4";
+    const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
-    const POLL_MS = 10000;
-    const ARRANGE_SECONDS = 90;
+    const ranks=["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
+    const suits=["♠","♥","♦","♣"];
+    const rankValue=Object.fromEntries(ranks.map((r,i)=>[r,i+2]));
+    const POLL_MS=10000,ARRANGE_SECONDS=90;
 
-    let state = null;
-    let me = null;
-    let draggedId = null;
-    let roomChannel = null;
-    let pollInterval = null;
-    let timerInterval = null;
-    let timeoutSubmitting = false;
-    let selectedCardId = null;
+    let state=null,me=null,draggedId=null,roomChannel=null,pollInterval=null,timerInterval=null,timeoutSubmitting=false,selectedCardId=null;
+    const screens={home:document.getElementById("homeScreen"),room:document.getElementById("roomScreen")};
+    const el=id=>document.getElementById(id);
+    const seatNames={banker:"Banker",player1:"Player 1",player2:"Player 2",player3:"Player 3"};
+    const seatOrder=["banker","player1","player2","player3"];
 
-    const screens = {
-      home: document.getElementById("homeScreen"),
-      room: document.getElementById("roomScreen")
-    };
+    el("joinRoomOpenBtn").addEventListener("click",()=>el("joinBox").classList.toggle("active"));
+    el("createRoomBtn").addEventListener("click",createRoom);
+    el("joinRoomBtn").addEventListener("click",joinRoom);
+    el("copyCodeBtn").addEventListener("click",copyCode);
+    el("leaveBtn").addEventListener("click",leaveRoom);
+    el("closeArrangeBtn").addEventListener("click",()=>closeModal("arrangeModal"));
+    el("closeShowdownBtn").addEventListener("click",()=>closeModal("showdownModal"));
+    el("headerNewDealBtn").addEventListener("click",headerNewDeal);
+    el("headerBackLobbyBtn").addEventListener("click",headerBackToLobby);
+    el("headerResetDbBtn").addEventListener("click",headerResetDb);
+    el("autoArrangeBtn").addEventListener("click",autoArrangeMySeat);
+    el("clearLayoutBtn").addEventListener("click",clearMyLayout);
+    el("submitHandBtn").addEventListener("click",submitHand);
+    el("mainAutoArrangeBtn").addEventListener("click",autoArrangeMySeat);
+    el("mainClearLayoutBtn").addEventListener("click",clearMyLayout);
+    el("mainSubmitHandBtn").addEventListener("click",submitHand);
 
-    const el = id => document.getElementById(id);
+    document.querySelectorAll(".seat-card").forEach(c=>c.addEventListener("click",()=>handleSeatClick(c.dataset.seat)));
 
-    const seatNames = {
-      banker: "Banker",
-      player1: "Player 1",
-      player2: "Player 2",
-      player3: "Player 3"
-    };
-
-    const seatOrder = ["banker", "player1", "player2", "player3"];
-
-    el("joinRoomOpenBtn").addEventListener("click", () => {
-      el("joinBox").style.display = el("joinBox").style.display === "none" ? "grid" : "none";
+    document.querySelectorAll(".dropzone").forEach(z=>{
+      z.addEventListener("dragover",e=>{e.preventDefault();z.classList.add("hover");});
+      z.addEventListener("dragleave",()=>z.classList.remove("hover"));
+      z.addEventListener("drop",e=>{e.preventDefault();z.classList.remove("hover");if(!draggedId)return;moveCard(draggedId,z.dataset.zone);});
     });
 
-    el("createRoomBtn").addEventListener("click", createRoom);
-    el("joinRoomBtn").addEventListener("click", joinRoom);
-    el("copyCodeBtn").addEventListener("click", copyCode);
-    el("leaveBtn").addEventListener("click", leaveRoom);
-    el("closeArrangeBtn").addEventListener("click", () => closeModal("arrangeModal"));
-    el("closeShowdownBtn").addEventListener("click", () => closeModal("showdownModal"));
-    el("headerNewDealBtn").addEventListener("click", headerNewDeal);
-    el("headerBackLobbyBtn").addEventListener("click", headerBackToLobby);
-    el("headerResetDbBtn").addEventListener("click", headerResetDb);
-    el("autoArrangeBtn").addEventListener("click", autoArrangeMySeat);
-    el("clearLayoutBtn").addEventListener("click", clearMyLayout);
-    el("submitHandBtn").addEventListener("click", submitHand);
-
-    el("mainAutoArrangeBtn").addEventListener("click", autoArrangeMySeat);
-    el("mainClearLayoutBtn").addEventListener("click", clearMyLayout);
-    el("mainSubmitHandBtn").addEventListener("click", submitHand);
-
-    document.querySelectorAll(".seat-card").forEach(card => {
-      card.addEventListener("click", () => handleSeatClick(card.dataset.seat));
-    });
-
-    document.querySelectorAll(".dropzone").forEach(zone => {
-      zone.addEventListener("dragover", e => {
-        e.preventDefault();
-        zone.classList.add("hover");
-      });
-      zone.addEventListener("dragleave", () => zone.classList.remove("hover"));
-      zone.addEventListener("drop", e => {
-        e.preventDefault();
-        zone.classList.remove("hover");
-        if (!draggedId) return;
-        moveCard(draggedId, zone.dataset.zone);
-      });
+    document.querySelectorAll(".main-dropzone").forEach(z=>{
+      z.addEventListener("dragover",e=>{e.preventDefault();z.classList.add("hover");});
+      z.addEventListener("dragleave",()=>z.classList.remove("hover"));
+      z.addEventListener("drop",e=>{e.preventDefault();z.classList.remove("hover");if(!draggedId)return;moveCard(draggedId,z.dataset.mainZone);});
+      z.addEventListener("click",e=>{if(!selectedCardId||e.target.closest(".playing-card"))return;moveCard(selectedCardId,z.dataset.mainZone);selectedCardId=null;});
     });
 
     restoreSession();
 
-    async function callRpc(fn, args) {
-      const { data, error } = await sb.rpc(fn, args);
-      if (error) {
-        console.error(error);
-        alert(error.message || "Supabase error");
-        throw error;
-      }
-      return data;
-    }
+    async function callRpc(fn,args){const{data,error}=await sb.rpc(fn,args);if(error){console.error(error);alert(error.message||"Supabase error");throw error;}return data;}
 
-    async function createRoom() {
-      const name = requirePlayerName();
-      if (!name) return;
+    async function createRoom(){const name=requirePlayerName();if(!name)return;const data=await callRpc("create_pusoy_room",{p_name:name});me={roomCode:data.room_code,seat:data.seat,token:data.player_token,name};saveSession();await refreshState();subscribeToRoom();startBackgroundRefresh();goRoom();}
 
-      const data = await callRpc("create_pusoy_room", { p_name: name });
+    async function joinRoom(){const name=requirePlayerName();if(!name)return;const code=el("roomCodeInput").value.trim();const seat=el("seatSelect").value;if(!code){alert("Enter a room code first.");return;}const data=await callRpc("join_pusoy_room",{p_room_code:code,p_name:name,p_seat:seat});me={roomCode:data.room_code,seat:data.seat,token:data.player_token,name};saveSession();await refreshState();subscribeToRoom();startBackgroundRefresh();goRoom();}
 
-      me = {
-        roomCode: data.room_code,
-        seat: data.seat,
-        token: data.player_token,
-        name
-      };
+    async function refreshState(){if(!me)return;state=await callRpc("get_pusoy_my_state",{p_room_code:me.roomCode,p_player_token:me.token});renderRoom();}
 
-      saveSession();
-      await refreshState();
-      subscribeToRoom();
-      startBackgroundRefresh();
-      goRoom();
-    }
+    function subscribeToRoom(){if(!me)return;if(roomChannel)sb.removeChannel(roomChannel);roomChannel=sb.channel("room_events_"+me.roomCode).on("postgres_changes",{event:"INSERT",schema:"public",table:"room_events",filter:"room_code=eq."+me.roomCode},async()=>{await refreshState();}).subscribe();}
 
-    async function joinRoom() {
-      const name = requirePlayerName();
-      if (!name) return;
+    function goRoom(){screens.home.classList.remove("active");screens.room.classList.add("active");el("headerRoomBar").classList.add("active");renderRoom();}
 
-      const code = el("roomCodeInput").value.trim();
-      const seat = el("seatSelect").value;
+    async function leaveRoom(){if(roomChannel){await sb.removeChannel(roomChannel);roomChannel=null;}stopBackgroundRefresh();localStorage.removeItem("pusoy_online_session");screens.room.classList.remove("active");screens.home.classList.add("active");el("headerRoomBar").classList.remove("active");state=null;me=null;el("headerNewDealBtn").style.display="none";el("headerBackLobbyBtn").style.display="none";el("headerResetDbBtn").style.display="none";}
 
-      if (!code) {
-        alert("Enter a room code first.");
-        return;
-      }
+    function copyCode(){navigator.clipboard?.writeText(me.roomCode);el("roomMessage").textContent="Room code copied: "+me.roomCode;}
 
-      const data = await callRpc("join_pusoy_room", {
-        p_room_code: code,
-        p_name: name,
-        p_seat: seat
-      });
+    function updateHeaderControls(){const nd=el("headerNewDealBtn"),bl=el("headerBackLobbyBtn"),rd=el("headerResetDbBtn");if(!state||!me||me.seat!=="banker"){nd.style.display="none";bl.style.display="none";rd.style.display="none";return;}const canNew=["lobby","waiting","showdown"].includes(state.status);nd.style.display=canNew?"":"none";nd.textContent=state.status==="lobby"?"Start Deal":"New Deal";bl.style.display=state.status!=="lobby"?"":"none";rd.style.display="";}
 
-      me = {
-        roomCode: data.room_code,
-        seat: data.seat,
-        token: data.player_token,
-        name
-      };
+    async function headerNewDeal(){if(!state||!me||me.seat!=="banker")return;if(state.status==="arranging"){alert("A round is already in progress.");return;}if(getJoinedSeats().length<2){alert("At least banker and one player should join.");return;}await startRound();}
 
-      saveSession();
-      await refreshState();
-      subscribeToRoom();
-      startBackgroundRefresh();
-      goRoom();
-    }
+    async function headerBackToLobby(){if(!state||!me||me.seat!=="banker")return;if(!confirm("Reset back to lobby?"))return;closeModal("arrangeModal");closeModal("showdownModal");await callRpc("reset_pusoy_lobby",{p_room_code:me.roomCode,p_player_token:me.token});await refreshState();}
 
-    async function refreshState() {
-      if (!me) return;
-      state = await callRpc("get_pusoy_my_state", {
-        p_room_code: me.roomCode,
-        p_player_token: me.token
-      });
-      renderRoom();
-    }
+    async function headerResetDb(){if(!state||!me||me.seat!=="banker")return;if(!confirm("Reset this room DB? Clears player seats and all cards."))return;closeModal("arrangeModal");closeModal("showdownModal");await callRpc("clear_pusoy_room_seats",{p_room_code:me.roomCode,p_player_token:me.token});selectedCardId=null;await refreshState();alert("Room reset.");}
 
-    function subscribeToRoom() {
-      if (!me) return;
-      if (roomChannel) sb.removeChannel(roomChannel);
+    function capId(s){return s.charAt(0).toUpperCase()+s.slice(1);}
 
-      roomChannel = sb
-        .channel("room_events_" + me.roomCode)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "room_events",
-            filter: "room_code=eq." + me.roomCode
-          },
-          async () => {
-            await refreshState();
-          }
-        )
-        .subscribe();
-    }
-
-    function goRoom() {
-      screens.home.classList.remove("active");
-      screens.room.classList.add("active");
-      el("headerRoomBar").classList.add("active");
-      renderRoom();
-    }
-
-    async function leaveRoom() {
-      if (roomChannel) {
-        await sb.removeChannel(roomChannel);
-        roomChannel = null;
-      }
-      stopBackgroundRefresh();
-      localStorage.removeItem("pusoy_online_session");
-      screens.room.classList.remove("active");
-      screens.home.classList.add("active");
-      el("headerRoomBar").classList.remove("active");
-      state = null;
-      me = null;
-      el("headerNewDealBtn").style.display = "none";
-      el("headerBackLobbyBtn").style.display = "none";
-      el("headerResetDbBtn").style.display = "none";
-    }
-
-    function copyCode() {
-      navigator.clipboard?.writeText(me.roomCode);
-      el("roomMessage").textContent = "Room code copied.";
-    }
-
-
-
-    document.querySelectorAll(".main-dropzone").forEach(zone => {
-      zone.addEventListener("dragover", e => {
-        e.preventDefault();
-        zone.classList.add("hover");
-      });
-
-      zone.addEventListener("dragleave", () => zone.classList.remove("hover"));
-
-      zone.addEventListener("drop", e => {
-        e.preventDefault();
-        zone.classList.remove("hover");
-        if (!draggedId) return;
-        moveCard(draggedId, zone.dataset.mainZone);
-      });
-
-      zone.addEventListener("click", e => {
-        if (!selectedCardId) return;
-        const clickedCard = e.target.closest(".playing-card");
-        if (clickedCard) return;
-        moveCard(selectedCardId, zone.dataset.mainZone);
-        selectedCardId = null;
-      });
-    });
-
-    function updateHeaderControls() {
-      const newDealBtn = el("headerNewDealBtn");
-      const backLobbyBtn = el("headerBackLobbyBtn");
-      const resetDbBtn = el("headerResetDbBtn");
-
-      if (!state || !me || me.seat !== "banker") {
-        newDealBtn.style.display = "none";
-        backLobbyBtn.style.display = "none";
-        resetDbBtn.style.display = "none";
-        return;
-      }
-
-      const canNewDeal = ["lobby", "waiting", "showdown"].includes(state.status);
-      newDealBtn.style.display = canNewDeal ? "inline-flex" : "none";
-      newDealBtn.textContent = state.status === "lobby" ? "Start Deal" : "New Deal";
-
-      backLobbyBtn.style.display = state.status !== "lobby" ? "inline-flex" : "none";
-      resetDbBtn.style.display = "inline-flex";
-    }
-
-    async function headerNewDeal() {
-      if (!state || !me) return;
-
-      if (me.seat !== "banker") {
-        alert("Only the banker can start a new deal.");
-        return;
-      }
-
-      if (state.status === "arranging") {
-        alert("A round is already in progress.");
-        return;
-      }
-
-      const joined = getJoinedSeats();
-      if (joined.length < 2) {
-        alert("At least banker and one player should join first.");
-        return;
-      }
-
-      await startRound();
-    }
-
-    async function headerBackToLobby() {
-      if (!state || !me) return;
-
-      if (me.seat !== "banker") {
-        alert("Only the banker can reset the lobby.");
-        return;
-      }
-
-      const ok = confirm("Reset back to lobby and clear current cards?");
-      if (!ok) return;
-
-      closeModal("arrangeModal");
-      closeModal("showdownModal");
-
-      await callRpc("reset_pusoy_lobby", {
-        p_room_code: me.roomCode,
-        p_player_token: me.token
-      });
-
-      await refreshState();
-    }
-
-
-
-    async function headerResetDb() {
-      if (!state || !me) return;
-
-      if (me.seat !== "banker") {
-        alert("Only the banker can reset the room database.");
-        return;
-      }
-
-      const ok = confirm(
-        "Reset this room database?\n\nThis will clear Player 1 / Player 2 / Player 3 seats, clear all cards, and return the room to lobby.\n\nThe banker stays in the room."
-      );
-
-      if (!ok) return;
-
-      closeModal("arrangeModal");
-      closeModal("showdownModal");
-
-      await callRpc("clear_pusoy_room_seats", {
-        p_room_code: me.roomCode,
-        p_player_token: me.token
-      });
-
-      selectedCardId = null;
-      await refreshState();
-
-      alert("Room reset. Player seats are now clear.");
-    }
-
-    function renderMainArrangeBoard() {}
-
-    function renderMainArrange(hand) {}
-
-    function applySelectedCardStyle() {
-      document.querySelectorAll(".playing-card, .seat-playing-card").forEach(card => {
-        card.classList.toggle("main-card-selected", false);
-      });
-    }
-
-    function renderRoom() {
-      if (!state || !me) return;
-
-      el("roomCodeDisplayHeader").textContent = me.roomCode;
-      el("mySeatDisplayHeader").textContent = `${me.name} (${seatNames[me.seat]})`;
-      el("roomStatusDisplayHeader").textContent = state.status;
-
-      seatOrder.forEach(seat => renderSeat(seat));
+    function renderRoom(){
+      if(!state||!me)return;
+      el("roomCodeDisplayHeader").textContent=me.roomCode;
+      el("mySeatDisplayHeader").textContent=`${me.name} (${seatNames[me.seat]})`;
+      el("roomStatusDisplayHeader").textContent=state.status;
+      seatOrder.forEach(s=>renderSeat(s));
       renderScoringCard();
       updateHeaderControls();
-
-      const joined = getJoinedSeats();
-      const submittedCount = joined.filter(s => state.players?.[s]?.submitted).length;
-      updateTimerUI();
-
-      const roomMessage = el("roomMessage");
-      roomMessage.style.display = state.status === "showdown" ? "none" : "block";
-
-      if (state.status === "lobby") {
-        roomMessage.innerHTML = `
-          <strong>Lobby:</strong> ${joined.length}/4 seats joined.
-          ${me.seat === "banker" ? "As banker, click Scoring when ready to start the round." : "Wait for the banker to start the round."}
-        `;
-      } else if (state.status === "arranging") {
-        roomMessage.innerHTML = `
-          <strong>Arrange phase:</strong> everyone should arrange their cards.
-          Submitted: ${submittedCount}/${joined.length}.
-        `;
-      } else if (state.status === "waiting") {
-        roomMessage.innerHTML = `
-          <strong>Waiting:</strong> all joined players submitted. Banker may open Showdown from Scoring.
-        `;
-      } else {
-        roomMessage.innerHTML = "";
-      }
+      const joined=getJoinedSeats(),subCount=joined.filter(s=>state.players?.[s]?.submitted).length;
+      const msg=el("roomMessage");
+      if(state.status==="lobby")msg.innerHTML=`<strong>Lobby:</strong> ${joined.length}/4 joined. ${me.seat==="banker"?"Click Scoring to start.":"Waiting for banker."}`;
+      else if(state.status==="arranging")msg.innerHTML=`<strong>Arranging:</strong> ${subCount}/${joined.length} submitted.`;
+      else if(state.status==="waiting")msg.innerHTML=`<strong>Waiting:</strong> All submitted. ${me.seat==="banker"?"Click Scoring to reveal showdown.":"Waiting for banker."}`;
+      else if(state.status==="showdown")msg.innerHTML=`<strong>Showdown!</strong> All hands revealed. Click Scoring to view results.`;
+      else msg.textContent="";
     }
 
-    function getJoinedSeats() {
-      return seatOrder.filter(s => state.players?.[s]?.joined);
+    function getJoinedSeats(){return seatOrder.filter(s=>state.players?.[s]?.joined);}
+
+    function renderSeat(seat){
+      if(seat==="scoring")return;
+      const card=el("seat-"+seat),player=state.players?.[seat];
+      card.classList.toggle("empty",!player);
+      card.classList.toggle("ready",!!player?.submitted);
+      card.classList.toggle("me",me.seat===seat);
+      card.classList.toggle("revealed",hasLargeSeatView(seat));
+      card.classList.toggle("arrange-mode",state.status==="arranging"&&seat===me.seat&&!state.my_submitted);
+      const nameEl=el("name"+capId(seat)),statusEl=el("status"+capId(seat)),badgeEl=el("badge"+capId(seat));
+      let bt="Empty",bc="";
+      if(seat==="banker")bc="host";
+      if(player?.submitted){bt="Ready ✓";bc="ready";}
+      else if(me.seat===seat){bt="You";bc="you";}
+      else if(player){bt="Joined";}
+      if(badgeEl){badgeEl.textContent=bt;badgeEl.className="sbadge"+(bc?" "+bc:"");}
+      if(!player){if(nameEl)nameEl.textContent=seatNames[seat];if(statusEl)statusEl.innerHTML="Empty";return;}
+      if(nameEl)nameEl.textContent=player.name;
+      if(state.status==="showdown"&&state.showdown_hands?.[seat]){const hand=fromShowdownHand(state.showdown_hands[seat]);if(statusEl)statusEl.innerHTML=inlineRevealHand(hand);return;}
+      if(state.status==="arranging"&&seat===me.seat&&!state.my_submitted){if(statusEl){statusEl.innerHTML="Arrange your cards"+interactiveSeatHtml();bindInteractiveSeat(card,getMyHandForArrange());}return;}
+      if(state.status==="arranging"||state.status==="waiting"){
+        if(seat===me.seat){const hand=getPreviewHandForSeatOwner();if(statusEl)statusEl.innerHTML=(player.submitted?"Ready ✓":"Arranging...")+inlineRevealHand(hand,true);}
+        else{if(statusEl)statusEl.innerHTML=(player.submitted?"Submitted ✓":"Arranging...")+inlineFaceDownLayout();}
+        return;
+      }
+      if(statusEl)statusEl.textContent=seatNames[seat];
     }
 
-    function renderSeat(seat) {
-      const card = el("seat-" + seat);
-      const player = state.players?.[seat];
+    function interactiveSeatHtml(){return`<div class="seat-arrange-wrap"><div class="seat-arrange-zone" data-seat-zone="top" data-limit="3"><div class="seat-arrange-label"><span>Top</span><span id="seatTopName">3 cards</span></div><div class="seat-arrange-cards" id="seatTopCards"></div></div><div class="seat-arrange-zone" data-seat-zone="middle" data-limit="5"><div class="seat-arrange-label"><span>Middle</span><span id="seatMiddleName">5 cards</span></div><div class="seat-arrange-cards" id="seatMiddleCards"></div></div><div class="seat-arrange-zone" data-seat-zone="bottom" data-limit="5"><div class="seat-arrange-label"><span>Bottom</span><span id="seatBottomName">5 cards</span></div><div class="seat-arrange-cards" id="seatBottomCards"></div></div><div class="seat-arrange-zone seat-arrange-pool" data-seat-zone="pool" data-limit="13"><div class="seat-arrange-label"><span>Unplaced</span><span id="seatPoolName">13 total</span></div><div class="seat-arrange-cards" id="seatPoolCards"></div></div><div class="seat-arrange-actions"><button type="button" class="btn btn-ghost" id="seatAutoArrangeBtn">Auto</button><button type="button" class="btn btn-ghost" id="seatClearLayoutBtn">Clear</button><button type="button" class="btn btn-win" id="seatSubmitHandBtn">Submit Hand</button></div><div class="seat-arrange-note" id="seatArrangeNote"></div></div>`;}
 
-      card.classList.toggle("empty", !player);
-      card.classList.toggle("ready", !!player?.submitted);
-      card.classList.toggle("me", me.seat === seat);
-      card.classList.toggle("revealed", hasLargeSeatView(seat));
-      card.classList.toggle("arrange-mode", state.status === "arranging" && seat === me.seat && !state.my_submitted);
-
-      const title = card.querySelector(".seat-title");
-      const sub = card.querySelector(".seat-sub");
-
-      let badge = "Seat";
-      if (seat === "banker") badge = "Host";
-      if (player?.submitted) badge = "Submitted ✓";
-      if (me.seat === seat) badge = "You";
-
-      card.querySelector(".seat-badge").textContent = badge;
-
-      if (!player) {
-        title.textContent = seatNames[seat];
-        sub.innerHTML = "Empty";
-        return;
-      }
-
-      title.textContent = player.name;
-
-      if (state.status === "showdown" && state.showdown_hands?.[seat]) {
-        const hand = fromShowdownHand(state.showdown_hands[seat]);
-        sub.innerHTML = `
-          <div><strong>${seatNames[seat]}</strong></div>
-          ${inlineRevealHand(hand)}
-        `;
-        return;
-      }
-
-      if (state.status === "arranging" && seat === me.seat && !state.my_submitted) {
-        const hand = getMyHandForArrange();
-        sub.innerHTML = `
-          <div><strong>${seatNames[seat]}</strong> · Arrange your cards</div>
-          ${interactiveSeatHtml()}
-        `;
-        bindInteractiveSeat(card, hand);
-        return;
-      }
-
-      if (state.status === "arranging" || state.status === "waiting") {
-        if (seat === me.seat) {
-          const hand = getPreviewHandForSeatOwner();
-          const helperText = state.status === "arranging"
-            ? `<strong>${seatNames[seat]}</strong> · ${player.submitted ? "Ready" : "Arranging"}`
-            : `<strong>${seatNames[seat]}</strong> · ${player.submitted ? "Ready" : "Waiting"}`;
-
-          sub.innerHTML = `
-            <div>${helperText}</div>
-            ${inlineRevealHand(hand, true)}
-          `;
-        } else {
-          sub.innerHTML = `
-            <div><strong>${seatNames[seat]}</strong> · ${player.submitted ? "Ready" : "Hidden"}</div>
-            ${inlineFaceDownLayout()}
-          `;
-        }
-        return;
-      }
-
-      sub.innerHTML = seatNames[seat];
-    }
-
-
-    function interactiveSeatHtml() {
-      return `
-        <div class="seat-arrange-wrap">
-          <div class="seat-arrange-zone" data-seat-zone="top" data-limit="3">
-            <div class="seat-arrange-label"><span>Top</span><span id="seatTopName">3 cards</span></div>
-            <div class="seat-arrange-cards" id="seatTopCards"></div>
-          </div>
-
-          <div class="seat-arrange-zone" data-seat-zone="middle" data-limit="5">
-            <div class="seat-arrange-label"><span>Middle</span><span id="seatMiddleName">5 cards</span></div>
-            <div class="seat-arrange-cards" id="seatMiddleCards"></div>
-          </div>
-
-          <div class="seat-arrange-zone" data-seat-zone="bottom" data-limit="5">
-            <div class="seat-arrange-label"><span>Bottom</span><span id="seatBottomName">5 cards</span></div>
-            <div class="seat-arrange-cards" id="seatBottomCards"></div>
-          </div>
-
-          <div class="seat-arrange-zone seat-arrange-pool" data-seat-zone="pool" data-limit="13">
-            <div class="seat-arrange-label"><span>Unplaced cards</span><span id="seatPoolName">13 total</span></div>
-            <div class="seat-arrange-cards" id="seatPoolCards"></div>
-          </div>
-
-          <div class="seat-arrange-actions">
-            <button type="button" class="secondary" id="seatAutoArrangeBtn">Auto Arrange</button>
-            <button type="button" class="secondary" id="seatClearLayoutBtn">Clear Layout</button>
-            <button type="button" class="good" id="seatSubmitHandBtn">Submit Hand</button>
-          </div>
-
-          <div class="seat-arrange-note" id="seatArrangeNote"></div>
-        </div>
-      `;
-    }
-
-    function bindInteractiveSeat(card, hand) {
-      const ids = {
-        top: card.querySelector("#seatTopCards"),
-        middle: card.querySelector("#seatMiddleCards"),
-        bottom: card.querySelector("#seatBottomCards"),
-        pool: card.querySelector("#seatPoolCards")
-      };
-
-      renderSeatCards(ids.top, hand.top, true);
-      renderSeatCards(ids.middle, hand.middle, true);
-      renderSeatCards(ids.bottom, hand.bottom, true);
-      renderSeatCards(ids.pool, hand.pool, true);
-
-      card.querySelector("#seatTopName").textContent = hand.top.length === 3 ? evaluate3(hand.top).name : "3 cards";
-      card.querySelector("#seatMiddleName").textContent = hand.middle.length === 5 ? evaluate5(hand.middle).name : "5 cards";
-      card.querySelector("#seatBottomName").textContent = hand.bottom.length === 5 ? evaluate5(hand.bottom).name : "5 cards";
-      card.querySelector("#seatPoolName").textContent = `${hand.pool.length} left`;
-
-      const valid = validateHand(hand);
-      card.querySelector("#seatArrangeNote").innerHTML = valid.ok
-        ? `<span class="win">Valid hand.</span> Tap or drag cards, then submit when ready.`
-        : `<span class="loss">${valid.reason}</span>`;
-
-      card.querySelectorAll("[data-seat-zone]").forEach(zone => {
-        zone.addEventListener("dragover", e => {
-          e.preventDefault();
-          zone.classList.add("drop-hover");
-        });
-
-        zone.addEventListener("dragleave", () => zone.classList.remove("drop-hover"));
-
-        zone.addEventListener("drop", e => {
-          e.preventDefault();
-          zone.classList.remove("drop-hover");
-          if (!draggedId) return;
-          moveCard(draggedId, zone.dataset.seatZone);
-          draggedId = null;
-        });
-
-        zone.addEventListener("click", e => {
-          const clickedCard = e.target.closest(".seat-playing-card");
-          if (clickedCard) return;
-          if (!selectedCardId) return;
-          moveCard(selectedCardId, zone.dataset.seatZone);
-        });
+    function bindInteractiveSeat(card,hand){
+      const ids={top:card.querySelector("#seatTopCards"),middle:card.querySelector("#seatMiddleCards"),bottom:card.querySelector("#seatBottomCards"),pool:card.querySelector("#seatPoolCards")};
+      renderSeatCards(ids.top,hand.top,true);renderSeatCards(ids.middle,hand.middle,true);renderSeatCards(ids.bottom,hand.bottom,true);renderSeatCards(ids.pool,hand.pool,true);
+      const tn=card.querySelector("#seatTopName");if(tn)tn.textContent=hand.top.length===3?evaluate3(hand.top).name:"3 cards";
+      const mn=card.querySelector("#seatMiddleName");if(mn)mn.textContent=hand.middle.length===5?evaluate5(hand.middle).name:"5 cards";
+      const bn=card.querySelector("#seatBottomName");if(bn)bn.textContent=hand.bottom.length===5?evaluate5(hand.bottom).name:"5 cards";
+      const pn=card.querySelector("#seatPoolName");if(pn)pn.textContent=`${hand.pool.length} left`;
+      const valid=validateHand(hand),note=card.querySelector("#seatArrangeNote");
+      if(note)note.innerHTML=valid.ok?`<span class="win">✓ Valid.</span> Submit when ready.`:`<span class="loss">✗ ${valid.reason}</span>`;
+      card.querySelectorAll("[data-seat-zone]").forEach(z=>{
+        z.addEventListener("dragover",e=>{e.preventDefault();z.classList.add("drop-hover");});
+        z.addEventListener("dragleave",()=>z.classList.remove("drop-hover"));
+        z.addEventListener("drop",e=>{e.preventDefault();z.classList.remove("drop-hover");if(!draggedId)return;moveCard(draggedId,z.dataset.seatZone);draggedId=null;});
+        z.addEventListener("click",e=>{if(e.target.closest(".seat-playing-card")||!selectedCardId)return;moveCard(selectedCardId,z.dataset.seatZone);});
       });
-
-      const autoBtn = card.querySelector("#seatAutoArrangeBtn");
-      const clearBtn = card.querySelector("#seatClearLayoutBtn");
-      const submitBtn = card.querySelector("#seatSubmitHandBtn");
-
-      autoBtn?.addEventListener("click", e => { e.stopPropagation(); autoArrangeMySeat(); });
-      clearBtn?.addEventListener("click", e => { e.stopPropagation(); clearMyLayout(); });
-      submitBtn?.addEventListener("click", e => { e.stopPropagation(); submitHand(); });
+      card.querySelector("#seatAutoArrangeBtn")?.addEventListener("click",e=>{e.stopPropagation();autoArrangeMySeat();});
+      card.querySelector("#seatClearLayoutBtn")?.addEventListener("click",e=>{e.stopPropagation();clearMyLayout();});
+      card.querySelector("#seatSubmitHandBtn")?.addEventListener("click",e=>{e.stopPropagation();submitHand();});
     }
 
-    function renderSeatCards(container, cards, draggable) {
-      if (!container) return;
-      container.innerHTML = "";
-      sortCards(cards).forEach(card => {
-        const div = document.createElement("div");
-        div.className = "seat-playing-card" + (card.suit === "♥" || card.suit === "♦" ? " red" : "") + (selectedCardId === card.id ? " selected" : "");
-        div.draggable = draggable;
-        div.dataset.id = card.id;
-        div.innerHTML = `<span class="rank">${card.rank}</span><span class="suit">${card.suit}</span>`;
-        if (draggable) {
-          div.addEventListener("dragstart", () => draggedId = card.id);
-          div.addEventListener("click", e => {
-            e.stopPropagation();
-            selectedCardId = selectedCardId === card.id ? null : card.id;
-            renderRoom();
-          });
+    function renderSeatCards(container,cards,draggable){
+      if(!container)return;container.innerHTML="";
+      sortCards(cards).forEach(card=>{
+        const div=document.createElement("div");
+        div.className="seat-playing-card"+(card.suit==="♥"||card.suit==="♦"?" red":"")+(selectedCardId===card.id?" selected":"");
+        div.draggable=draggable;div.dataset.id=card.id;
+        div.innerHTML=`<span class="rank">${card.rank}</span><span class="suit">${card.suit}</span>`;
+        if(draggable){
+          div.addEventListener("dragstart",()=>draggedId=card.id);
+          div.addEventListener("click",e=>{e.stopPropagation();selectedCardId=selectedCardId===card.id?null:card.id;renderRoom();});
         }
         container.appendChild(div);
       });
     }
 
-    function renderScoringCard() {
-      const card = el("seat-scoring");
-      const joined = getJoinedSeats();
-      const submitted = joined.filter(s => state.players?.[s]?.submitted);
+    function renderScoringCard(){
+      const joined=getJoinedSeats(),submitted=joined.filter(s=>state.players?.[s]?.submitted);
+      const statusEl=el("statusScoring"),badgeEl=el("badgeScoring");
+      if(state.status==="lobby"){if(statusEl)statusEl.textContent=me.seat==="banker"?"Click to start round":"Banker starts round";if(badgeEl){badgeEl.textContent="Lobby";badgeEl.className="sbadge live";}}
+      else if(state.status==="arranging"){if(statusEl)statusEl.innerHTML=`Submitted ${submitted.length}/${joined.length}`;if(badgeEl){badgeEl.textContent="Live";badgeEl.className="sbadge live";}}
+      else if(state.status==="waiting"){if(statusEl)statusEl.textContent=me.seat==="banker"?"Click to reveal":"Waiting for banker";if(badgeEl){badgeEl.textContent="Ready";badgeEl.className="sbadge ready";}}
+      else if(state.status==="showdown"){if(statusEl)statusEl.innerHTML=renderScoringInsideCard();if(badgeEl){badgeEl.textContent="Results";badgeEl.className="sbadge host";}}
+    }
 
-      let sub = "Waiting in lobby";
-      let badge = "Control";
-
-      if (state.status === "lobby") {
-        sub = me.seat === "banker" ? "Click to start round" : "Banker starts round";
-      } else if (state.status === "arranging") {
-        const seconds = getArrangeSecondsRemaining();
-        sub = `Submitted ${submitted.length}/${joined.length}<br>${seconds === null ? "" : "Timer: " + seconds + "s"}`;
-        badge = "Live";
-      } else if (state.status === "waiting") {
-        sub = me.seat === "banker" ? "Click to reveal cards" : "Waiting for banker";
-        badge = "Ready";
-      } else {
-        sub = renderScoringInsideCard();
-        badge = "Results";
+    async function handleSeatClick(seat){
+      if(!state||!me)return;
+      if(seat==="scoring"){await handleScoringClick();return;}
+      if(!state.players?.[seat]){alert("This seat is empty.");return;}
+      if(seat===me.seat){
+        if(state.status==="lobby"){alert("Wait for the banker to start.");return;}
+        if(state.status==="arranging"||state.status==="showdown")return;
+        if(state.status==="waiting"){alert("Hand submitted. Waiting for showdown.");return;}
       }
-
-      card.querySelector(".seat-badge").textContent = badge;
-      card.querySelector(".seat-sub").innerHTML = sub;
+      if(state.status==="showdown")return;
+      alert("Hidden until showdown.");
     }
 
-    async function handleSeatClick(seat) {
-      if (!state || !me) return;
-
-      if (seat === "scoring") {
-        await handleScoringClick();
-        return;
-      }
-
-      if (!state.players?.[seat]) {
-        alert("This seat is empty.");
-        return;
-      }
-
-      if (seat === me.seat) {
-        if (state.status === "lobby") {
-          alert("Wait for the banker to start the round.");
-          return;
-        }
-
-        if (state.status === "arranging") {
-          return;
-        }
-
-        if (state.status === "waiting") {
-          alert("Your hand is submitted. Waiting for showdown.");
-          return;
-        }
-
-        if (state.status === "showdown") {
-          return;
-        }
-      }
-
-      if (state.status === "showdown") {
-        return;
-      } else {
-        alert("Hidden until showdown.");
-      }
+    async function handleScoringClick(){
+      if(state.status==="lobby"){if(me.seat!=="banker"){alert("Only banker can start.");return;}if(getJoinedSeats().length<2){alert("Need at least 2 players.");return;}await startRound();return;}
+      if(state.status==="arranging"){const j=getJoinedSeats(),s=j.filter(x=>state.players?.[x]?.submitted);alert(`Waiting: ${s.length}/${j.length} submitted`);return;}
+      if(state.status==="waiting"){if(me.seat!=="banker"){alert("Waiting for banker.");return;}await revealShowdown();return;}
+      if(state.status==="showdown")openShowdown();
     }
 
-    async function handleScoringClick() {
-      if (state.status === "lobby") {
-        if (me.seat !== "banker") {
-          alert("Only the banker can start the round.");
-          return;
-        }
+    async function startRound(){const joined=getJoinedSeats(),deck=shuffle(makeDeck()),deals={};let offset=0;joined.forEach(seat=>{deals[seat]=deck.slice(offset,offset+13);offset+=13;});await callRpc("start_pusoy_round",{p_room_code:me.roomCode,p_player_token:me.token,p_deals:deals});await refreshState();}
 
-        const joined = getJoinedSeats();
-        if (joined.length < 2) {
-          alert("At least banker and one player should join first.");
-          return;
-        }
+    async function revealShowdown(){await callRpc("reveal_pusoy_showdown",{p_room_code:me.roomCode,p_player_token:me.token});await refreshState();}
 
-        await startRound();
-        return;
-      }
+    function getMyHandForArrange(){const h=state.my_hand||{};return{pool:h.private_cards||[],top:h.top_cards||[],middle:h.middle_cards||[],bottom:h.bottom_cards||[]};}
+    function setMyHandForArrange(hand){state.my_hand={private_cards:hand.pool,top_cards:hand.top,middle_cards:hand.middle,bottom_cards:hand.bottom};}
 
-      if (state.status === "arranging") {
-        const joined = getJoinedSeats();
-        const submitted = joined.filter(s => state.players?.[s]?.submitted);
-        alert(`Waiting for submissions: ${submitted.length}/${joined.length}`);
-        return;
-      }
-
-      if (state.status === "waiting") {
-        if (me.seat !== "banker") {
-          alert("Waiting for banker to reveal showdown.");
-          return;
-        }
-        await revealShowdown();
-        return;
-      }
-
-      if (state.status === "showdown") {
-        return;
-      }
+    function moveCard(cardId,targetZone){
+      const hand=getMyHandForArrange(),areas=["pool","top","middle","bottom"];let card=null;
+      for(const area of areas){const idx=hand[area].findIndex(c=>c.id===cardId);if(idx>=0){card=hand[area].splice(idx,1)[0];break;}}
+      if(!card)return;
+      const limits={top:3,middle:5,bottom:5,pool:13};
+      if(hand[targetZone].length>=(limits[targetZone]??13)){hand.pool.push(card);alert("That row is full.");}
+      else hand[targetZone].push(card);
+      setMyHandForArrange(hand);selectedCardId=null;renderRoom();
     }
 
-    async function startRound() {
-      const joined = getJoinedSeats();
-      const deck = shuffle(makeDeck());
-      const deals = {};
-      let offset = 0;
+    function autoArrangeMySeat(){const c=getMyHandForArrange();setMyHandForArrange(autoArrange([...c.pool,...c.top,...c.middle,...c.bottom]));selectedCardId=null;renderRoom();}
+    function clearMyLayout(){const h=getMyHandForArrange();h.pool=[...h.pool,...h.top,...h.middle,...h.bottom];h.top=[];h.middle=[];h.bottom=[];setMyHandForArrange(h);selectedCardId=null;renderRoom();}
 
-      joined.forEach(seat => {
-        deals[seat] = deck.slice(offset, offset + 13);
-        offset += 13;
-      });
+    async function submitHand(){const hand=getMyHandForArrange(),valid=validateHand(hand);if(!valid.ok){alert("Cannot submit: "+valid.reason);return;}await callRpc("submit_pusoy_hand",{p_room_code:me.roomCode,p_player_token:me.token,p_top:hand.top,p_middle:hand.middle,p_bottom:hand.bottom});closeModal("arrangeModal");await refreshState();}
 
-      await callRpc("start_pusoy_round", {
-        p_room_code: me.roomCode,
-        p_player_token: me.token,
-        p_deals: deals
-      });
+    function startBackgroundRefresh(){stopBackgroundRefresh();pollInterval=setInterval(async()=>{if(!me)return;try{await refreshState();}catch(e){console.warn(e);}},POLL_MS);timerInterval=setInterval(()=>maybeAutoSubmitOnTimeout(),1000);}
+    function stopBackgroundRefresh(){if(pollInterval)clearInterval(pollInterval);if(timerInterval)clearInterval(timerInterval);pollInterval=null;timerInterval=null;timeoutSubmitting=false;}
 
-      await refreshState();
-    }
+    function getArrangeSecondsRemaining(){if(!state||state.status!=="arranging")return null;const started=state.arrangement_started_at||state.updated_at;if(!started)return null;return Math.max(0,Math.ceil((new Date(started).getTime()+ARRANGE_SECONDS*1000-Date.now())/1000));}
 
-    async function revealShowdown() {
-      await callRpc("reveal_pusoy_showdown", {
-        p_room_code: me.roomCode,
-        p_player_token: me.token
-      });
-      await refreshState();
-    }
+    async function maybeAutoSubmitOnTimeout(){if(!state||!me||state.status!=="arranging"||state.my_submitted||timeoutSubmitting)return;const s=getArrangeSecondsRemaining();if(s===null||s>0)return;timeoutSubmitting=true;try{let hand=getMyHandForArrange();if(!validateHand(hand).ok){hand=autoArrange([...hand.pool,...hand.top,...hand.middle,...hand.bottom]);setMyHandForArrange(hand);}await callRpc("submit_pusoy_hand",{p_room_code:me.roomCode,p_player_token:me.token,p_top:hand.top,p_middle:hand.middle,p_bottom:hand.bottom});closeModal("arrangeModal");await refreshState();el("roomMessage").innerHTML="<strong>Time up.</strong> Hand auto-submitted.";}catch(e){console.warn(e);}finally{timeoutSubmitting=false;}}
 
-    function openArrange() {
-      const hand = getMyHandForArrange();
-      el("arrangeTitle").textContent = `${seatNames[me.seat]} — Arrange Your Cards`;
-      renderArrange(hand);
-      openModal("arrangeModal");
-    }
+    function hasLargeSeatView(seat){if(!state)return false;if(state.status==="showdown"&&!!state.showdown_hands?.[seat])return true;if((state.status==="arranging"||state.status==="waiting")&&!!state.players?.[seat])return true;return false;}
 
-    function getMyHandForArrange() {
-      const h = state.my_hand || {};
-      return {
-        pool: h.private_cards || [],
-        top: h.top_cards || [],
-        middle: h.middle_cards || [],
-        bottom: h.bottom_cards || []
-      };
-    }
-
-    function setMyHandForArrange(hand) {
-      state.my_hand = {
-        private_cards: hand.pool,
-        top_cards: hand.top,
-        middle_cards: hand.middle,
-        bottom_cards: hand.bottom
-      };
-    }
-
-    function renderArrange(hand) {
-      renderCards(document.querySelector('[data-zone="top"]'), hand.top, true);
-      renderCards(document.querySelector('[data-zone="middle"]'), hand.middle, true);
-      renderCards(document.querySelector('[data-zone="bottom"]'), hand.bottom, true);
-      renderCards(document.querySelector('[data-zone="pool"]'), hand.pool, true);
-
-      el("topName").textContent = hand.top.length === 3 ? evaluate3(hand.top).name : "";
-      el("middleName").textContent = hand.middle.length === 5 ? evaluate5(hand.middle).name : "";
-      el("bottomName").textContent = hand.bottom.length === 5 ? evaluate5(hand.bottom).name : "";
-
-      const valid = validateHand(hand);
-      el("arrangeNote").innerHTML = valid.ok
-        ? `<span class="win">Valid hand.</span> Click Submit Hand when ready.`
-        : `<span class="loss">${valid.reason}</span>`;
-
-      // Inline seat arrangement is now the primary arrangement UI.
-    }
-
-    function moveCard(cardId, targetZone) {
-      const hand = getMyHandForArrange();
-      const areas = ["pool", "top", "middle", "bottom"];
-      let card = null;
-
-      for (const area of areas) {
-        const idx = hand[area].findIndex(c => c.id === cardId);
-        if (idx >= 0) {
-          card = hand[area].splice(idx, 1)[0];
-          break;
-        }
-      }
-
-      if (!card) return;
-
-      const limits = { top: 3, middle: 5, bottom: 5, pool: 13 };
-      const limit = limits[targetZone] ?? 13;
-
-      if (hand[targetZone].length >= limit) {
-        hand.pool.push(card);
-        alert("That row is full.");
-      } else {
-        hand[targetZone].push(card);
-      }
-
-      setMyHandForArrange(hand);
-      selectedCardId = null;
-      renderRoom();
-    }
-
-    function autoArrangeMySeat() {
-      const current = getMyHandForArrange();
-      const all = [...current.pool, ...current.top, ...current.middle, ...current.bottom];
-      const arranged = autoArrange(all);
-      setMyHandForArrange(arranged);
-      selectedCardId = null;
-      renderRoom();
-    }
-
-    function clearMyLayout() {
-      const hand = getMyHandForArrange();
-      hand.pool = [...hand.pool, ...hand.top, ...hand.middle, ...hand.bottom];
-      hand.top = [];
-      hand.middle = [];
-      hand.bottom = [];
-      setMyHandForArrange(hand);
-      selectedCardId = null;
-      renderRoom();
-    }
-
-    async function submitHand() {
-      const hand = getMyHandForArrange();
-      const valid = validateHand(hand);
-      if (!valid.ok) {
-        alert("Cannot submit: " + valid.reason);
-        return;
-      }
-
-      await callRpc("submit_pusoy_hand", {
-        p_room_code: me.roomCode,
-        p_player_token: me.token,
-        p_top: hand.top,
-        p_middle: hand.middle,
-        p_bottom: hand.bottom
-      });
-
-      closeModal("arrangeModal");
-      await refreshState();
-    }
-
-
-    function startBackgroundRefresh() {
-      stopBackgroundRefresh();
-
-      pollInterval = setInterval(async () => {
-        if (!me) return;
-        try {
-          await refreshState();
-        } catch (err) {
-          console.warn("Polling refresh failed", err);
-        }
-      }, POLL_MS);
-
-      timerInterval = setInterval(() => {
-        updateTimerUI();
-        maybeAutoSubmitOnTimeout();
-      }, 1000);
-    }
-
-    function stopBackgroundRefresh() {
-      if (pollInterval) clearInterval(pollInterval);
-      if (timerInterval) clearInterval(timerInterval);
-      pollInterval = null;
-      timerInterval = null;
-      timeoutSubmitting = false;
-    }
-
-    function getArrangeSecondsRemaining() {
-      if (!state || state.status !== "arranging") return null;
-      const started = state.arrangement_started_at || state.updated_at;
-      if (!started) return null;
-
-      const end = new Date(started).getTime() + ARRANGE_SECONDS * 1000;
-      const remaining = Math.ceil((end - Date.now()) / 1000);
-      return Math.max(0, remaining);
-    }
-
-    function updateTimerUI() {
-      const pill = el("timerPill");
-      const display = el("timerDisplay");
-      if (!pill || !display || !state) return;
-
-      const seconds = getArrangeSecondsRemaining();
-      if (seconds === null) {
-        pill.style.display = "none";
-        return;
-      }
-
-      pill.style.display = "inline-flex";
-      display.textContent = `${seconds}s`;
-      display.style.color = seconds <= 15 ? "#dc2626" : "#111827";
-    }
-
-    async function maybeAutoSubmitOnTimeout() {
-      if (!state || !me || state.status !== "arranging") return;
-      if (state.my_submitted || timeoutSubmitting) return;
-
-      const seconds = getArrangeSecondsRemaining();
-      if (seconds === null || seconds > 0) return;
-
-      timeoutSubmitting = true;
-      try {
-        let hand = getMyHandForArrange();
-        const valid = validateHand(hand);
-
-        if (!valid.ok) {
-          const all = [...hand.pool, ...hand.top, ...hand.middle, ...hand.bottom];
-          hand = autoArrange(all);
-          setMyHandForArrange(hand);
-        }
-
-        await callRpc("submit_pusoy_hand", {
-          p_room_code: me.roomCode,
-          p_player_token: me.token,
-          p_top: hand.top,
-          p_middle: hand.middle,
-          p_bottom: hand.bottom
-        });
-
-        closeModal("arrangeModal");
-        await refreshState();
-        el("roomMessage").innerHTML = "<strong>Time up.</strong> Your hand was auto-arranged and submitted.";
-      } catch (err) {
-        console.warn("Auto-submit failed", err);
-      } finally {
-        timeoutSubmitting = false;
-      }
-    }
-
-
-    function hasLargeSeatView(seat) {
-      if (!state) return false;
-      if (state.status === "showdown" && !!state.showdown_hands?.[seat]) return true;
-      if ((state.status === "arranging" || state.status === "waiting") && !!state.players?.[seat]) return true;
-      return false;
-    }
-
-    function getPreviewHandForSeatOwner() {
-      const hand = getMyHandForArrange();
-
-      // If already fully arranged, show the actual layout.
-      if (hand.top.length === 3 && hand.middle.length === 5 && hand.bottom.length === 5) {
-        return hand;
-      }
-
-      // Otherwise build a preview layout from current cards so the seat card still looks like the showdown layout.
-      const all = [...hand.top, ...hand.middle, ...hand.bottom, ...hand.pool];
-      const preview = autoArrange(all);
-
-      // Preserve already placed cards when possible by placing them first if the row isn't complete.
-      if (hand.top.length > 0 && hand.top.length <= 3) {
-        const remainder = preview.top.filter(p => !hand.top.some(c => c.id === p.id));
-        preview.top = [...hand.top, ...remainder].slice(0, 3);
-      }
-
-      if (hand.middle.length > 0 && hand.middle.length <= 5) {
-        const remainder = preview.middle.filter(p => !hand.middle.some(c => c.id === p.id));
-        preview.middle = [...hand.middle, ...remainder].slice(0, 5);
-      }
-
-      if (hand.bottom.length > 0 && hand.bottom.length <= 5) {
-        const remainder = preview.bottom.filter(p => !hand.bottom.some(c => c.id === p.id));
-        preview.bottom = [...hand.bottom, ...remainder].slice(0, 5);
-      }
-
+    function getPreviewHandForSeatOwner(){
+      const hand=getMyHandForArrange();
+      if(hand.top.length===3&&hand.middle.length===5&&hand.bottom.length===5)return hand;
+      const all=[...hand.top,...hand.middle,...hand.bottom,...hand.pool],preview=autoArrange(all);
+      if(hand.top.length>0&&hand.top.length<=3){const r=preview.top.filter(p=>!hand.top.some(c=>c.id===p.id));preview.top=[...hand.top,...r].slice(0,3);}
+      if(hand.middle.length>0&&hand.middle.length<=5){const r=preview.middle.filter(p=>!hand.middle.some(c=>c.id===p.id));preview.middle=[...hand.middle,...r].slice(0,5);}
+      if(hand.bottom.length>0&&hand.bottom.length<=5){const r=preview.bottom.filter(p=>!hand.bottom.some(c=>c.id===p.id));preview.bottom=[...hand.bottom,...r].slice(0,5);}
       return preview;
     }
 
-    function inlineFaceDownLayout() {
-      return `
-        <div class="inline-hand">
-          <div class="inline-row">
-            <div class="inline-row-title"><span>Top</span><span>Hidden</span></div>
-            ${miniBacks(3)}
-          </div>
-          <div class="inline-row">
-            <div class="inline-row-title"><span>Middle</span><span>Hidden</span></div>
-            ${miniBacks(5)}
-          </div>
-          <div class="inline-row">
-            <div class="inline-row-title"><span>Bottom</span><span>Hidden</span></div>
-            ${miniBacks(5)}
-          </div>
-        </div>
-      `;
+    function inlineFaceDownLayout(){return`<div class="inline-hand"><div class="inline-row"><div class="inline-row-title"><span>Top</span><span>Hidden</span></div>${miniBacks(3)}</div><div class="inline-row"><div class="inline-row-title"><span>Middle</span><span>Hidden</span></div>${miniBacks(5)}</div><div class="inline-row"><div class="inline-row-title"><span>Bottom</span><span>Hidden</span></div>${miniBacks(5)}</div></div>`;}
+    function miniBacks(count){return`<div class="mini-backs">${Array.from({length:count}).map(()=>`<span class="mini-card back"></span>`).join("")}</div>`;}
+    function miniCardHtml(card){return`<span class="mini-card ${card.suit==="♥"||card.suit==="♦"?"red":""}">${card.rank}${card.suit}</span>`;}
+    function miniCards(cards){return`<div class="mini-cards">${sortCards(cards).map(miniCardHtml).join("")}</div>`;}
+
+    function inlineRevealHand(hand,previewMode=false){
+      const tn=hand.top.length===3?evaluate3(hand.top).name:(previewMode?"Preview":""),mn=hand.middle.length===5?evaluate5(hand.middle).name:(previewMode?"Preview":""),bn=hand.bottom.length===5?evaluate5(hand.bottom).name:(previewMode?"Preview":"");
+      return`<div class="inline-hand"><div class="inline-row"><div class="inline-row-title"><span>Top</span><span>${tn}</span></div>${miniCards(hand.top)}</div><div class="inline-row"><div class="inline-row-title"><span>Middle</span><span>${mn}</span></div>${miniCards(hand.middle)}</div><div class="inline-row"><div class="inline-row-title"><span>Bottom</span><span>${bn}</span></div>${miniCards(hand.bottom)}</div></div>`;
     }
 
-    function miniBacks(count) {
-      return `<div class="mini-backs">${Array.from({ length: count }).map(() => `<span class="mini-card back"></span>`).join("")}</div>`;
+    function renderScoringInsideCard(){
+      if(!state?.showdown_hands?.banker)return"Results loading...";
+      const rows=["player1","player2","player3"].map(seat=>{const info=state.showdown_hands[seat];if(!info)return"";const result=compareVsBanker(fromShowdownHand(info),fromShowdownHand(state.showdown_hands.banker));return`<div class="inline-result-item"><strong>${seatNames[seat]}:</strong> <span class="${result.className}">${result.outcome}</span><br>${result.details.join("<br>")}</div>`;}).join("");
+      return`Cards revealed<div class="inline-results">${rows||"No players."}</div>`;
     }
 
-    function miniCardHtml(card) {
-      return `<span class="mini-card ${card.suit === "♥" || card.suit === "♦" ? "red" : ""}">${card.rank}${card.suit}</span>`;
-    }
-
-    function miniCards(cards) {
-      return `<div class="mini-cards">${sortCards(cards).map(miniCardHtml).join("")}</div>`;
-    }
-
-    function inlineRevealHand(hand, previewMode = false) {
-      const topName = hand.top.length === 3 ? evaluate3(hand.top).name : (previewMode ? "Preview" : "");
-      const middleName = hand.middle.length === 5 ? evaluate5(hand.middle).name : (previewMode ? "Preview" : "");
-      const bottomName = hand.bottom.length === 5 ? evaluate5(hand.bottom).name : (previewMode ? "Preview" : "");
-
-      return `
-        <div class="inline-hand">
-          <div class="inline-row">
-            <div class="inline-row-title"><span>Top</span><span>${topName}</span></div>
-            ${miniCards(hand.top)}
-          </div>
-          <div class="inline-row">
-            <div class="inline-row-title"><span>Middle</span><span>${middleName}</span></div>
-            ${miniCards(hand.middle)}
-          </div>
-          <div class="inline-row">
-            <div class="inline-row-title"><span>Bottom</span><span>${bottomName}</span></div>
-            ${miniCards(hand.bottom)}
-          </div>
-        </div>
-      `;
-    }
-
-    function renderScoringInsideCard() {
-      if (!state?.showdown_hands?.banker) return "Results loading...";
-      const rows = ["player1", "player2", "player3"].map(seat => {
-        const info = state.showdown_hands[seat];
-        if (!info) return "";
-        const result = compareVsBanker(fromShowdownHand(info), fromShowdownHand(state.showdown_hands.banker));
-        return `<div class="inline-result-item"><strong>${seatNames[seat]}:</strong> <span class="${result.className}">${result.outcome}</span><br>${result.details.join("<br>")}</div>`;
-      }).join("");
-
-      return `<div>Cards flipped up</div><div class="inline-results">${rows || "No players to score."}</div>`;
-    }
-
-    function renderInlineScoreSummary() {
-      if (!state?.showdown_hands?.banker) return "";
-      const rows = ["player1", "player2", "player3"].map(seat => {
-        const info = state.showdown_hands[seat];
-        if (!info) return "";
-        const result = compareVsBanker(fromShowdownHand(info), fromShowdownHand(state.showdown_hands.banker));
-        return `<div><strong>${seatNames[seat]}:</strong> <span class="${result.className}">${result.outcome}</span> — ${result.details.join(" | ")}</div>`;
-      }).join("");
-      return rows || "No players to score.";
-    }
-
-    function openShowdown() {
-      if (state.status !== "showdown" || !state.showdown_hands) {
-        alert("Showdown is not ready yet.");
-        return;
-      }
-
-      const html = [];
+    function openShowdown(){
+      if(state.status!=="showdown"||!state.showdown_hands){alert("Showdown not ready.");return;}
+      const html=[];
       html.push(`<div class="result-list">`);
-
-      seatOrder.forEach(seat => {
-        const info = state.showdown_hands[seat];
-        if (!info) return;
-        const hand = fromShowdownHand(info);
-        html.push(`
-          <div class="reveal-hand">
-            <h3>${seatNames[seat]} — ${info.name}</h3>
-            ${renderHandLine("Top", hand.top, evaluate3(hand.top).name)}
-            ${renderHandLine("Middle", hand.middle, evaluate5(hand.middle).name)}
-            ${renderHandLine("Bottom", hand.bottom, evaluate5(hand.bottom).name)}
-          </div>
-        `);
-      });
-
+      seatOrder.forEach(seat=>{const info=state.showdown_hands[seat];if(!info)return;const hand=fromShowdownHand(info);html.push(`<div class="reveal-hand"><h3>${seatNames[seat]}</h3>${renderHandLine("Top",hand.top,evaluate3(hand.top).name)}${renderHandLine("Middle",hand.middle,evaluate5(hand.middle).name)}${renderHandLine("Bottom",hand.bottom,evaluate5(hand.bottom).name)}</div>`);});
+      html.push(`</div><div class="sd-heading">Scoring vs Banker</div><div class="result-list">`);
+      ["player1","player2","player3"].forEach(seat=>{const info=state.showdown_hands[seat];if(!info||!state.showdown_hands.banker)return;const result=compareVsBanker(fromShowdownHand(info),fromShowdownHand(state.showdown_hands.banker));html.push(`<div class="result-card"><h3>${seatNames[seat]} vs Banker: <span class="${result.className}">${result.outcome}</span></h3><div class="small-text">${result.details.join("<br>")}</div></div>`);});
       html.push(`</div>`);
-      html.push(`<h2>Scoring vs Banker</h2>`);
-      html.push(`<div class="result-list">`);
-
-      ["player1", "player2", "player3"].forEach(seat => {
-        const info = state.showdown_hands[seat];
-        if (!info || !state.showdown_hands.banker) return;
-        const result = compareVsBanker(fromShowdownHand(info), fromShowdownHand(state.showdown_hands.banker));
-        html.push(`
-          <div class="result-card">
-            <h3>${seatNames[seat]} vs Banker: <span class="${result.className}">${result.outcome}</span></h3>
-            <div class="small">${result.details.join("<br>")}</div>
-          </div>
-        `);
-      });
-
-      html.push(`</div>`);
-
-      if (me.seat === "banker") {
-        html.push(`
-          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
-            <button onclick="newRound()">New Round</button>
-            <button class="secondary" onclick="resetToLobby()">Back to Lobby</button>
-          </div>
-        `);
-      }
-
-      el("showdownContent").innerHTML = html.join("");
+      if(me.seat==="banker")html.push(`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;"><button class="btn btn-primary" onclick="newRound()">New Round</button><button class="btn btn-ghost" onclick="resetToLobby()">Back to Lobby</button></div>`);
+      el("showdownContent").innerHTML=html.join("");
       openModal("showdownModal");
     }
 
-    function fromShowdownHand(info) {
-      return {
-        top: info.top_cards || [],
-        middle: info.middle_cards || [],
-        bottom: info.bottom_cards || [],
-        pool: []
-      };
+    function fromShowdownHand(info){return{top:info.top_cards||[],middle:info.middle_cards||[],bottom:info.bottom_cards||[],pool:[]};}
+    window.newRound=async function(){closeModal("showdownModal");await startRound();}
+    window.resetToLobby=async function(){closeModal("showdownModal");await callRpc("reset_pusoy_lobby",{p_room_code:me.roomCode,p_player_token:me.token});await refreshState();}
+
+    function renderHandLine(label,cards,name){return`<div class="hand-row"><div class="hand-label">${label}</div><div><div class="dropzone">${cards.map(cardHtml).join("")}</div><div class="hand-name">${name}</div></div></div>`;}
+
+    function openModal(id){el(id).classList.add("active");}
+    function closeModal(id){el(id).classList.remove("active");}
+
+    function requirePlayerName(){const input=el("nameInput"),name=input.value.trim().slice(0,24);if(!name){alert("Please enter your name first.");input.focus();input.style.borderColor="var(--accent)";setTimeout(()=>input.style.borderColor="",2000);return null;}return name;}
+
+    function makeDeck(){const deck=[];for(const suit of suits)for(const rank of ranks)deck.push({id:`${rank}${suit}-${Math.random().toString(36).slice(2,9)}`,rank,suit,value:rankValue[rank]});return deck;}
+    function shuffle(arr){const copy=[...arr];for(let i=copy.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]];}return copy;}
+    function sortCards(cards){return[...cards].sort((a,b)=>b.value-a.value||a.suit.localeCompare(b.suit));}
+
+    function renderCards(container,cards,draggable){
+      if(!container)return;container.innerHTML="";
+      sortCards(cards).forEach(card=>{const div=document.createElement("div");div.className="playing-card"+(card.suit==="♥"||card.suit==="♦"?" red":"");div.draggable=draggable;div.dataset.id=card.id;div.innerHTML=`<span class="rank">${card.rank}</span><span class="suit">${card.suit}</span>`;if(draggable){div.addEventListener("dragstart",()=>draggedId=card.id);div.addEventListener("click",e=>{e.stopPropagation();selectedCardId=selectedCardId===card.id?null:card.id;renderRoom();});}container.appendChild(div);});
     }
 
-    window.newRound = async function() {
-      closeModal("showdownModal");
-      await startRound();
+    function cardHtml(card){return`<div class="playing-card ${card.suit==="♥"||card.suit==="♦"?"red":""}"><span class="rank">${card.rank}</span><span class="suit">${card.suit}</span></div>`;}
+
+    function countsByRank(cards){const c={};cards.forEach(c2=>c[c2.value]=(c[c2.value]||0)+1);return c;}
+
+    function isStraight(values){const unique=[...new Set(values)].sort((a,b)=>a-b);if(unique.length!==5)return{ok:false,high:Math.max(...values)};if(unique.every((v,i)=>i===0||v===unique[i-1]+1))return{ok:true,high:unique[4]};if(JSON.stringify(unique)===JSON.stringify([2,3,4,5,14]))return{ok:true,high:5};return{ok:false,high:Math.max(...values)};}
+
+    function evaluate5(cards){
+      if(cards.length!==5)return{category:-1,name:"Incomplete",tiebreak:[]};
+      const values=cards.map(c=>c.value),sorted=[...values].sort((a,b)=>b-a),counts=countsByRank(cards);
+      const groups=Object.entries(counts).map(([v,c])=>({value:Number(v),count:c})).sort((a,b)=>b.count-a.count||b.value-a.value);
+      const flush=cards.every(c=>c.suit===cards[0].suit),straight=isStraight(values);
+      if(straight.ok&&flush)return{category:8,name:straight.high===14?"Royal Flush":"Straight Flush",tiebreak:[straight.high]};
+      if(groups[0].count===4)return{category:7,name:"Four of a Kind",tiebreak:[groups[0].value,...groups.filter(g=>g.count===1).map(g=>g.value)]};
+      if(groups[0].count===3&&groups[1].count===2)return{category:6,name:"Full House",tiebreak:[groups[0].value,groups[1].value]};
+      if(flush)return{category:5,name:"Flush",tiebreak:sorted};
+      if(straight.ok)return{category:4,name:"Straight",tiebreak:[straight.high]};
+      if(groups[0].count===3)return{category:3,name:"Three of a Kind",tiebreak:[groups[0].value,...groups.filter(g=>g.count===1).map(g=>g.value).sort((a,b)=>b-a)]};
+      if(groups[0].count===2&&groups[1].count===2){const pairs=groups.filter(g=>g.count===2).map(g=>g.value).sort((a,b)=>b-a);return{category:2,name:"Two Pair",tiebreak:[...pairs,groups.find(g=>g.count===1).value]};}
+      if(groups[0].count===2)return{category:1,name:"One Pair",tiebreak:[groups[0].value,...groups.filter(g=>g.count===1).map(g=>g.value).sort((a,b)=>b-a)]};
+      return{category:0,name:"High Card",tiebreak:sorted};
     }
 
-    window.resetToLobby = async function() {
-      closeModal("showdownModal");
-      await callRpc("reset_pusoy_lobby", {
-        p_room_code: me.roomCode,
-        p_player_token: me.token
-      });
-      await refreshState();
+    function evaluate3(cards){
+      if(cards.length!==3)return{category:-1,name:"Incomplete",tiebreak:[]};
+      const values=cards.map(c=>c.value).sort((a,b)=>b-a);
+      const groups=Object.entries(countsByRank(cards)).map(([v,c])=>({value:Number(v),count:c})).sort((a,b)=>b.count-a.count||b.value-a.value);
+      if(groups[0].count===3)return{category:3,name:"Three of a Kind",tiebreak:[groups[0].value]};
+      if(groups[0].count===2)return{category:1,name:"One Pair",tiebreak:[groups[0].value,groups.find(g=>g.count===1).value]};
+      return{category:0,name:"High Card",tiebreak:values};
     }
 
-    function renderHandLine(label, cards, name) {
-      return `
-        <div class="hand-row">
-          <div class="hand-label">${label}</div>
-          <div>
-            <div class="dropzone">${cards.map(cardHtml).join("")}</div>
-            <div class="hand-name">${name}</div>
-          </div>
-        </div>
-      `;
+    function compareEval(a,b){if(a.category!==b.category)return a.category>b.category?1:-1;const len=Math.max(a.tiebreak.length,b.tiebreak.length);for(let i=0;i<len;i++){const av=a.tiebreak[i]||0,bv=b.tiebreak[i]||0;if(av!==bv)return av>bv?1:-1;}return 0;}
+
+    function validateHand(hand){
+      if(hand.top.length!==3)return{ok:false,reason:"Top needs 3 cards."};
+      if(hand.middle.length!==5)return{ok:false,reason:"Middle needs 5 cards."};
+      if(hand.bottom.length!==5)return{ok:false,reason:"Bottom needs 5 cards."};
+      if(hand.pool.length!==0)return{ok:false,reason:"You still have unplaced cards."};
+      const top=evaluate3(hand.top),middle=evaluate5(hand.middle),bottom=evaluate5(hand.bottom);
+      if(compareEval(bottom,middle)<0)return{ok:false,reason:"Bottom is weaker than Middle."};
+      if(compareEval(middle,top)<0)return{ok:false,reason:"Middle is weaker than Top."};
+      return{ok:true,reason:"Valid."};
     }
 
-    function openModal(id) { el(id).classList.add("active"); }
-    function closeModal(id) { el(id).classList.remove("active"); }
-
-
-    function requirePlayerName() {
-      const input = el("nameInput");
-      const name = cleanName(input.value);
-
-      if (!name) {
-        alert("Please enter your name first. This name will appear on your Banker/Player card.");
-        input.focus();
-        input.style.borderColor = "#dc2626";
-        input.style.boxShadow = "0 0 0 4px rgba(220,38,38,0.12)";
-        return null;
-      }
-
-      input.style.borderColor = "";
-      input.style.boxShadow = "";
-      return name;
+    function compareVsBanker(player,banker){
+      const rows=[{label:"Top",p:evaluate3(player.top),b:evaluate3(banker.top)},{label:"Middle",p:evaluate5(player.middle),b:evaluate5(banker.middle)},{label:"Bottom",p:evaluate5(player.bottom),b:evaluate5(banker.bottom)}];
+      let wins=0,losses=0;
+      const details=rows.map(row=>{const c=compareEval(row.p,row.b);if(c>0)wins++;else if(c<0)losses++;return`${row.label}: ${c>0?"Win":c<0?"Lose":"Push"} — ${row.p.name} vs ${row.b.name}`;});
+      let outcome="Push",className="push";
+      if(wins>losses){outcome=wins===3?"Player scoops":"Player wins";className="win";}
+      else if(losses>wins){outcome=losses===3?"Banker scoops":"Banker wins";className="loss";}
+      return{outcome,className,details};
     }
 
-    function cleanName(name) { return name.trim().slice(0, 24); }
-
-    function makeDeck() {
-      const deck = [];
-      for (const suit of suits) {
-        for (const rank of ranks) {
-          deck.push({
-            id: `${rank}${suit}-${Math.random().toString(36).slice(2, 9)}`,
-            rank,
-            suit,
-            value: rankValue[rank]
-          });
-        }
-      }
-      return deck;
+    function autoArrange(cards){
+      const sorted=sortCards(cards),attempts=[{pool:[],bottom:sorted.slice(0,5),middle:sorted.slice(5,10),top:sorted.slice(10,13)}];
+      for(let i=0;i<1000;i++){const s=shuffle(cards);attempts.push({pool:[],bottom:s.slice(0,5),middle:s.slice(5,10),top:s.slice(10,13)});}
+      let best=null,bestScore=-Infinity;
+      attempts.forEach(hand=>{if(!validateHand(hand).ok)return;const score=evaluate5(hand.bottom).category*100000+evaluate5(hand.middle).category*10000+evaluate3(hand.top).category*1000+evaluate5(hand.bottom).tiebreak.reduce((a,b)=>a+b,0)*4+evaluate5(hand.middle).tiebreak.reduce((a,b)=>a+b,0)*2+evaluate3(hand.top).tiebreak.reduce((a,b)=>a+b,0);if(score>bestScore){bestScore=score;best=hand;}});
+      return best||{pool:[],bottom:sorted.slice(0,5),middle:sorted.slice(5,10),top:sorted.slice(10,13)};
     }
 
-    function shuffle(arr) {
-      const copy = [...arr];
-      for (let i = copy.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [copy[i], copy[j]] = [copy[j], copy[i]];
-      }
-      return copy;
-    }
+    function saveSession(){if(!me)return;localStorage.setItem("pusoy_online_session",JSON.stringify(me));}
 
-    function sortCards(cards) {
-      return [...cards].sort((a, b) => b.value - a.value || a.suit.localeCompare(b.suit));
-    }
-
-    function renderCards(container, cards, draggable) {
-      container.innerHTML = "";
-      sortCards(cards).forEach(card => {
-        const div = document.createElement("div");
-        div.className = "playing-card" + (card.suit === "♥" || card.suit === "♦" ? " red" : "");
-        div.draggable = draggable;
-        div.dataset.id = card.id;
-        div.innerHTML = `<span class="rank">${card.rank}</span><span class="suit">${card.suit}</span>`;
-        if (draggable) {
-          div.addEventListener("dragstart", () => draggedId = card.id);
-          div.addEventListener("click", e => {
-            e.stopPropagation();
-            selectedCardId = selectedCardId === card.id ? null : card.id;
-            applySelectedCardStyle();
-          });
-        }
-        container.appendChild(div);
-      });
-    }
-
-    function cardHtml(card) {
-      return `<div class="playing-card ${card.suit === "♥" || card.suit === "♦" ? "red" : ""}">
-        <span class="rank">${card.rank}</span><span class="suit">${card.suit}</span>
-      </div>`;
-    }
-
-    function countsByRank(cards) {
-      const counts = {};
-      cards.forEach(c => counts[c.value] = (counts[c.value] || 0) + 1);
-      return counts;
-    }
-
-    function isStraight(values) {
-      const unique = [...new Set(values)].sort((a, b) => a - b);
-      if (unique.length !== 5) return { ok: false, high: Math.max(...values) };
-
-      const normal = unique.every((v, i) => i === 0 || v === unique[i - 1] + 1);
-      if (normal) return { ok: true, high: unique[4] };
-
-      const wheel = JSON.stringify(unique) === JSON.stringify([2,3,4,5,14]);
-      if (wheel) return { ok: true, high: 5 };
-
-      return { ok: false, high: Math.max(...values) };
-    }
-
-    function evaluate5(cards) {
-      if (cards.length !== 5) return { category: -1, name: "Incomplete", tiebreak: [] };
-
-      const values = cards.map(c => c.value);
-      const sorted = [...values].sort((a, b) => b - a);
-      const counts = countsByRank(cards);
-      const groups = Object.entries(counts)
-        .map(([value, count]) => ({ value: Number(value), count }))
-        .sort((a, b) => b.count - a.count || b.value - a.value);
-
-      const flush = cards.every(c => c.suit === cards[0].suit);
-      const straight = isStraight(values);
-
-      if (straight.ok && flush) return { category: 8, name: straight.high === 14 ? "Royal / Ace-high Straight Flush" : "Straight Flush", tiebreak: [straight.high] };
-      if (groups[0].count === 4) return { category: 7, name: "Four of a Kind", tiebreak: [groups[0].value, ...groups.filter(g => g.count === 1).map(g => g.value)] };
-      if (groups[0].count === 3 && groups[1].count === 2) return { category: 6, name: "Full House", tiebreak: [groups[0].value, groups[1].value] };
-      if (flush) return { category: 5, name: "Flush", tiebreak: sorted };
-      if (straight.ok) return { category: 4, name: "Straight", tiebreak: [straight.high] };
-      if (groups[0].count === 3) return { category: 3, name: "Three of a Kind", tiebreak: [groups[0].value, ...groups.filter(g => g.count === 1).map(g => g.value).sort((a,b)=>b-a)] };
-      if (groups[0].count === 2 && groups[1].count === 2) {
-        const pairs = groups.filter(g => g.count === 2).map(g => g.value).sort((a,b)=>b-a);
-        return { category: 2, name: "Two Pair", tiebreak: [...pairs, groups.find(g => g.count === 1).value] };
-      }
-      if (groups[0].count === 2) return { category: 1, name: "One Pair", tiebreak: [groups[0].value, ...groups.filter(g => g.count === 1).map(g => g.value).sort((a,b)=>b-a)] };
-      return { category: 0, name: "High Card", tiebreak: sorted };
-    }
-
-    function evaluate3(cards) {
-      if (cards.length !== 3) return { category: -1, name: "Incomplete", tiebreak: [] };
-
-      const values = cards.map(c => c.value).sort((a,b)=>b-a);
-      const groups = Object.entries(countsByRank(cards))
-        .map(([value, count]) => ({ value: Number(value), count }))
-        .sort((a,b)=>b.count - a.count || b.value - a.value);
-
-      if (groups[0].count === 3) return { category: 3, name: "Three of a Kind", tiebreak: [groups[0].value] };
-      if (groups[0].count === 2) return { category: 1, name: "One Pair", tiebreak: [groups[0].value, groups.find(g => g.count === 1).value] };
-      return { category: 0, name: "High Card", tiebreak: values };
-    }
-
-    function compareEval(a, b) {
-      if (a.category !== b.category) return a.category > b.category ? 1 : -1;
-      const len = Math.max(a.tiebreak.length, b.tiebreak.length);
-      for (let i = 0; i < len; i++) {
-        const av = a.tiebreak[i] || 0;
-        const bv = b.tiebreak[i] || 0;
-        if (av !== bv) return av > bv ? 1 : -1;
-      }
-      return 0;
-    }
-
-    function validateHand(hand) {
-      if (hand.top.length !== 3) return { ok: false, reason: "Top needs 3 cards." };
-      if (hand.middle.length !== 5) return { ok: false, reason: "Middle needs 5 cards." };
-      if (hand.bottom.length !== 5) return { ok: false, reason: "Bottom needs 5 cards." };
-      if (hand.pool.length !== 0) return { ok: false, reason: "You still have unplaced cards." };
-
-      const top = evaluate3(hand.top);
-      const middle = evaluate5(hand.middle);
-      const bottom = evaluate5(hand.bottom);
-
-      const topComparable = { category: top.category, tiebreak: top.tiebreak };
-      if (compareEval(bottom, middle) < 0) return { ok: false, reason: "Invalid: Bottom is weaker than Middle." };
-      if (compareEval(middle, topComparable) < 0) return { ok: false, reason: "Invalid: Middle is weaker than Top." };
-      return { ok: true, reason: "Valid." };
-    }
-
-    function handNameSummary(hand) {
-      if (!hand.top.length || !hand.middle.length || !hand.bottom.length) return "No hand";
-      return `${evaluate3(hand.top).name} / ${evaluate5(hand.middle).name} / ${evaluate5(hand.bottom).name}`;
-    }
-
-    function compareVsBanker(player, banker) {
-      const rows = [
-        { label: "Top", p: evaluate3(player.top), b: evaluate3(banker.top) },
-        { label: "Middle", p: evaluate5(player.middle), b: evaluate5(banker.middle) },
-        { label: "Bottom", p: evaluate5(player.bottom), b: evaluate5(banker.bottom) }
-      ];
-
-      let wins = 0;
-      let losses = 0;
-
-      const details = rows.map(row => {
-        const c = compareEval(row.p, row.b);
-        if (c > 0) wins++;
-        else if (c < 0) losses++;
-        return `${row.label}: ${c > 0 ? "Win" : c < 0 ? "Lose" : "Push"} — ${row.p.name} vs ${row.b.name}`;
-      });
-
-      let outcome = "Push";
-      let className = "push";
-
-      if (wins > losses) {
-        outcome = wins === 3 ? "Player scoops" : "Player wins";
-        className = "win";
-      } else if (losses > wins) {
-        outcome = losses === 3 ? "Banker scoops" : "Banker wins";
-        className = "loss";
-      }
-
-      return { outcome, className, details };
-    }
-
-    function autoArrange(cards) {
-      const sorted = sortCards(cards);
-      const attempts = [];
-
-      attempts.push({
-        pool: [],
-        bottom: sorted.slice(0,5),
-        middle: sorted.slice(5,10),
-        top: sorted.slice(10,13)
-      });
-
-      for (let i = 0; i < 1000; i++) {
-        const s = shuffle(cards);
-        attempts.push({
-          pool: [],
-          bottom: s.slice(0,5),
-          middle: s.slice(5,10),
-          top: s.slice(10,13)
-        });
-      }
-
-      let best = null;
-      let bestScore = -Infinity;
-
-      attempts.forEach(hand => {
-        if (!validateHand(hand).ok) return;
-        const score =
-          evaluate5(hand.bottom).category * 100000 +
-          evaluate5(hand.middle).category * 10000 +
-          evaluate3(hand.top).category * 1000 +
-          evaluate5(hand.bottom).tiebreak.reduce((a,b)=>a+b,0) * 4 +
-          evaluate5(hand.middle).tiebreak.reduce((a,b)=>a+b,0) * 2 +
-          evaluate3(hand.top).tiebreak.reduce((a,b)=>a+b,0);
-        if (score > bestScore) {
-          bestScore = score;
-          best = hand;
-        }
-      });
-
-      return best || { pool: [], bottom: sorted.slice(0,5), middle: sorted.slice(5,10), top: sorted.slice(10,13) };
-    }
-
-    function saveSession() {
-      if (!me) return;
-      localStorage.setItem("pusoy_online_session", JSON.stringify(me));
-    }
-
-    async function restoreSession() {
-      const raw = localStorage.getItem("pusoy_online_session");
-      if (!raw) return;
-      try {
-        me = JSON.parse(raw);
-        await refreshState();
-        if (!me.name && state?.my_name) {
-          me.name = state.my_name;
-          saveSession();
-        }
-        subscribeToRoom();
-        startBackgroundRefresh();
-        goRoom();
-      } catch (err) {
-        console.warn("Could not restore session", err);
-        localStorage.removeItem("pusoy_online_session");
-      }
-    }
+    async function restoreSession(){const raw=localStorage.getItem("pusoy_online_session");if(!raw)return;try{me=JSON.parse(raw);await refreshState();if(!me.name&&state?.my_name){me.name=state.my_name;saveSession();}subscribeToRoom();startBackgroundRefresh();goRoom();}catch(e){console.warn(e);localStorage.removeItem("pusoy_online_session");}}
   </script>
 </body>
 </html>
