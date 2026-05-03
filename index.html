@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pusoy Private Room Online</title>
+  <title>Pusoy Online</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
@@ -396,13 +396,12 @@
   <div class="app">
     <div class="topbar">
       <div class="brand">
-        <h1>Pusoy Private Room</h1>
-        <span>Online SPA: 1 banker vs 3 players</span>
+        <h1>♣ Pusoy Online</h1>
       </div>
       <div class="header-actions">
         <button id="headerNewDealBtn" class="good" style="display:none">New Deal</button>
         <button id="headerBackLobbyBtn" class="secondary" style="display:none">Back to Lobby</button>
-        <div class="pill" id="modePill">Supabase online mode</div>
+        <div class="pill" id="modePill" style="display:none"></div>
       </div>
     </div>
 
@@ -417,7 +416,7 @@
           <div class="form-grid">
             <label>
               <span class="small">Your name</span>
-              <input id="nameInput" placeholder="Example: Dad, Kuya, Player 1" />
+              <input id="nameInput" placeholder="Required. Example: Dad, Kuya, Player 1" required />
             </label>
 
             <div class="two">
@@ -442,9 +441,7 @@
             </div>
           </div>
 
-          <div class="note">
-            Run the SQL setup first in Supabase. Then upload this HTML to Vercel or open it locally for testing.
-          </div>
+
         </div>
 
         <div class="panel">
@@ -660,7 +657,9 @@
     }
 
     async function createRoom() {
-      const name = cleanName(el("nameInput").value) || "Banker";
+      const name = requirePlayerName();
+      if (!name) return;
+
       const data = await callRpc("create_pusoy_room", { p_name: name });
 
       me = {
@@ -678,7 +677,9 @@
     }
 
     async function joinRoom() {
-      const name = cleanName(el("nameInput").value) || "Player";
+      const name = requirePlayerName();
+      if (!name) return;
+
       const code = el("roomCodeInput").value.trim();
       const seat = el("seatSelect").value;
 
@@ -829,7 +830,7 @@
       if (!state || !me) return;
 
       el("roomCodeDisplay").textContent = me.roomCode;
-      el("mySeatDisplay").textContent = seatNames[me.seat];
+      el("mySeatDisplay").textContent = `${me.name} (${seatNames[me.seat]})`;
       el("roomStatusDisplay").textContent = state.status;
 
       seatOrder.forEach(seat => renderSeat(seat));
@@ -872,7 +873,8 @@
       card.classList.toggle("me", me.seat === seat);
       card.classList.toggle("revealed", state.status === "showdown" && !!state.showdown_hands?.[seat]);
 
-      card.querySelector(".seat-title").textContent = seatNames[seat];
+      const title = card.querySelector(".seat-title");
+      const sub = card.querySelector(".seat-sub");
 
       let badge = "Seat";
       if (seat === "banker") badge = "Host";
@@ -881,31 +883,33 @@
 
       card.querySelector(".seat-badge").textContent = badge;
 
-      const sub = card.querySelector(".seat-sub");
-
       if (!player) {
+        title.textContent = seatNames[seat];
         sub.innerHTML = "Empty";
         return;
       }
 
+      // The chosen name becomes the main label on the card.
+      title.textContent = player.name;
+
       if (state.status === "showdown" && state.showdown_hands?.[seat]) {
         const hand = fromShowdownHand(state.showdown_hands[seat]);
         sub.innerHTML = `
-          <div>${player.name}</div>
+          <div><strong>${seatNames[seat]}</strong></div>
           ${inlineRevealHand(hand)}
         `;
       } else if (state.status === "arranging") {
         sub.innerHTML = `
-          <div>${player.name} · ${player.submitted ? "Ready" : (seat === me.seat ? "Click to arrange" : "Arranging")}</div>
+          <div><strong>${seatNames[seat]}</strong> · ${player.submitted ? "Ready" : (seat === me.seat ? "Click to arrange" : "Arranging")}</div>
           ${miniBacks(13)}
         `;
       } else if (state.status === "waiting") {
         sub.innerHTML = `
-          <div>${player.name} · ${player.submitted ? "Ready" : "Waiting"}</div>
+          <div><strong>${seatNames[seat]}</strong> · ${player.submitted ? "Ready" : "Waiting"}</div>
           ${miniBacks(13)}
         `;
       } else {
-        sub.innerHTML = player.name;
+        sub.innerHTML = seatNames[seat];
       }
     }
 
@@ -1386,6 +1390,24 @@
     function openModal(id) { el(id).classList.add("active"); }
     function closeModal(id) { el(id).classList.remove("active"); }
 
+
+    function requirePlayerName() {
+      const input = el("nameInput");
+      const name = cleanName(input.value);
+
+      if (!name) {
+        alert("Please enter your name first. This name will appear on your Banker/Player card.");
+        input.focus();
+        input.style.borderColor = "#dc2626";
+        input.style.boxShadow = "0 0 0 4px rgba(220,38,38,0.12)";
+        return null;
+      }
+
+      input.style.borderColor = "";
+      input.style.boxShadow = "";
+      return name;
+    }
+
     function cleanName(name) { return name.trim().slice(0, 24); }
 
     function makeDeck() {
@@ -1612,6 +1634,10 @@
       try {
         me = JSON.parse(raw);
         await refreshState();
+        if (!me.name && state?.my_name) {
+          me.name = state.my_name;
+          saveSession();
+        }
         subscribeToRoom();
         startBackgroundRefresh();
         goRoom();
