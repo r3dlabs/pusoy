@@ -258,7 +258,7 @@
     }
 
     .main-arrange-board {
-      display: none;
+      display: none !important;
       background: rgba(255,255,255,0.9);
       border: 1px solid var(--line);
       border-radius: 24px;
@@ -335,6 +335,129 @@
       font-size: 13px;
       line-height: 1.4;
       margin-top: 8px;
+    }
+
+
+    .seat-arrange-wrap {
+      margin-top: 12px;
+      display: grid;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .seat-arrange-zone {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 12px;
+      padding: 8px;
+      width: 100%;
+    }
+
+    .seat-arrange-zone.drop-hover {
+      border-color: rgba(96,165,250,0.75);
+      background: rgba(37,99,235,0.14);
+    }
+
+    .seat-arrange-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.72);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .seat-arrange-cards {
+      min-height: 58px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: flex-start;
+    }
+
+    .seat-arrange-pool .seat-arrange-cards {
+      min-height: 96px;
+    }
+
+    .seat-arrange-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+
+    .seat-arrange-actions button {
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .seat-arrange-note {
+      background: rgba(255,247,237,0.95);
+      border: 1px solid rgba(253,186,116,0.7);
+      color: #9a3412;
+      border-radius: 12px;
+      padding: 10px;
+      font-size: 12px;
+      line-height: 1.35;
+      margin-top: 4px;
+    }
+
+    .seat-card.arrange-mode {
+      min-height: 560px;
+      justify-content: flex-start;
+      align-items: stretch;
+      text-align: left;
+    }
+
+    .seat-card.arrange-mode .seat-title {
+      margin-bottom: 4px;
+    }
+
+    .seat-card.arrange-mode .seat-sub {
+      width: 100%;
+    }
+
+    .seat-playing-card {
+      width: 42px;
+      height: 56px;
+      border-radius: 10px;
+      background: #fff;
+      color: #111827;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      font-weight: 900;
+      cursor: grab;
+      user-select: none;
+      font-size: 18px;
+    }
+
+    .seat-playing-card.red {
+      color: #dc2626;
+    }
+
+    .seat-playing-card .suit {
+      position: absolute;
+      right: 5px;
+      bottom: 4px;
+      font-size: 12px;
+    }
+
+    .seat-playing-card.selected {
+      outline: 3px solid rgba(96,165,250,0.75);
+      transform: translateY(-3px);
+    }
+
+    @media (max-width: 980px) {
+      .seat-card.arrange-mode {
+        min-height: 0;
+      }
     }
 
     .main-arrange-note {
@@ -1046,40 +1169,13 @@
     }
 
 
-    function renderMainArrangeBoard() {
-      const board = el("mainArrangeBoard");
-      if (!state || !me || state.status !== "arranging" || state.my_submitted) {
-        board.classList.remove("active");
-        selectedCardId = null;
-        return;
-      }
+    function renderMainArrangeBoard() {}
 
-      board.classList.add("active");
-      el("mainArrangeTitle").textContent = `${seatNames[me.seat]} — Arrange Your Cards`;
-      renderMainArrange(getMyHandForArrange());
-    }
-
-    function renderMainArrange(hand) {
-      renderCards(document.querySelector('[data-main-zone="top"]'), hand.top, true);
-      renderCards(document.querySelector('[data-main-zone="middle"]'), hand.middle, true);
-      renderCards(document.querySelector('[data-main-zone="bottom"]'), hand.bottom, true);
-      renderCards(document.querySelector('[data-main-zone="pool"]'), hand.pool, true);
-
-      el("mainTopName").textContent = hand.top.length === 3 ? evaluate3(hand.top).name : "";
-      el("mainMiddleName").textContent = hand.middle.length === 5 ? evaluate5(hand.middle).name : "";
-      el("mainBottomName").textContent = hand.bottom.length === 5 ? evaluate5(hand.bottom).name : "";
-
-      const valid = validateHand(hand);
-      el("mainArrangeNote").innerHTML = valid.ok
-        ? `<span class="win">Valid hand.</span> Click Submit Hand when ready.`
-        : `<span class="loss">${valid.reason}</span>`;
-
-      applySelectedCardStyle();
-    }
+    function renderMainArrange(hand) {}
 
     function applySelectedCardStyle() {
-      document.querySelectorAll(".playing-card").forEach(card => {
-        card.classList.toggle("main-card-selected", !!selectedCardId && card.dataset.id === selectedCardId);
+      document.querySelectorAll(".playing-card, .seat-playing-card").forEach(card => {
+        card.classList.toggle("main-card-selected", false);
       });
     }
 
@@ -1093,7 +1189,6 @@
       seatOrder.forEach(seat => renderSeat(seat));
       renderScoringCard();
       updateHeaderControls();
-      renderMainArrangeBoard();
 
       const joined = getJoinedSeats();
       const submittedCount = joined.filter(s => state.players?.[s]?.submitted).length;
@@ -1133,6 +1228,7 @@
       card.classList.toggle("ready", !!player?.submitted);
       card.classList.toggle("me", me.seat === seat);
       card.classList.toggle("revealed", hasLargeSeatView(seat));
+      card.classList.toggle("arrange-mode", state.status === "arranging" && seat === me.seat && !state.my_submitted);
 
       const title = card.querySelector(".seat-title");
       const sub = card.querySelector(".seat-sub");
@@ -1161,11 +1257,21 @@
         return;
       }
 
+      if (state.status === "arranging" && seat === me.seat && !state.my_submitted) {
+        const hand = getMyHandForArrange();
+        sub.innerHTML = `
+          <div><strong>${seatNames[seat]}</strong> · Arrange your cards</div>
+          ${interactiveSeatHtml()}
+        `;
+        bindInteractiveSeat(card, hand);
+        return;
+      }
+
       if (state.status === "arranging" || state.status === "waiting") {
         if (seat === me.seat) {
           const hand = getPreviewHandForSeatOwner();
           const helperText = state.status === "arranging"
-            ? `<strong>${seatNames[seat]}</strong> · ${player.submitted ? "Ready" : "Click to arrange"}`
+            ? `<strong>${seatNames[seat]}</strong> · ${player.submitted ? "Ready" : "Arranging"}`
             : `<strong>${seatNames[seat]}</strong> · ${player.submitted ? "Ready" : "Waiting"}`;
 
           sub.innerHTML = `
@@ -1182,6 +1288,118 @@
       }
 
       sub.innerHTML = seatNames[seat];
+    }
+
+
+    function interactiveSeatHtml() {
+      return `
+        <div class="seat-arrange-wrap">
+          <div class="seat-arrange-zone" data-seat-zone="top" data-limit="3">
+            <div class="seat-arrange-label"><span>Top</span><span id="seatTopName">3 cards</span></div>
+            <div class="seat-arrange-cards" id="seatTopCards"></div>
+          </div>
+
+          <div class="seat-arrange-zone" data-seat-zone="middle" data-limit="5">
+            <div class="seat-arrange-label"><span>Middle</span><span id="seatMiddleName">5 cards</span></div>
+            <div class="seat-arrange-cards" id="seatMiddleCards"></div>
+          </div>
+
+          <div class="seat-arrange-zone" data-seat-zone="bottom" data-limit="5">
+            <div class="seat-arrange-label"><span>Bottom</span><span id="seatBottomName">5 cards</span></div>
+            <div class="seat-arrange-cards" id="seatBottomCards"></div>
+          </div>
+
+          <div class="seat-arrange-zone seat-arrange-pool" data-seat-zone="pool" data-limit="13">
+            <div class="seat-arrange-label"><span>Unplaced cards</span><span id="seatPoolName">13 total</span></div>
+            <div class="seat-arrange-cards" id="seatPoolCards"></div>
+          </div>
+
+          <div class="seat-arrange-actions">
+            <button type="button" class="secondary" id="seatAutoArrangeBtn">Auto Arrange</button>
+            <button type="button" class="secondary" id="seatClearLayoutBtn">Clear Layout</button>
+            <button type="button" class="good" id="seatSubmitHandBtn">Submit Hand</button>
+          </div>
+
+          <div class="seat-arrange-note" id="seatArrangeNote"></div>
+        </div>
+      `;
+    }
+
+    function bindInteractiveSeat(card, hand) {
+      const ids = {
+        top: card.querySelector("#seatTopCards"),
+        middle: card.querySelector("#seatMiddleCards"),
+        bottom: card.querySelector("#seatBottomCards"),
+        pool: card.querySelector("#seatPoolCards")
+      };
+
+      renderSeatCards(ids.top, hand.top, true);
+      renderSeatCards(ids.middle, hand.middle, true);
+      renderSeatCards(ids.bottom, hand.bottom, true);
+      renderSeatCards(ids.pool, hand.pool, true);
+
+      card.querySelector("#seatTopName").textContent = hand.top.length === 3 ? evaluate3(hand.top).name : "3 cards";
+      card.querySelector("#seatMiddleName").textContent = hand.middle.length === 5 ? evaluate5(hand.middle).name : "5 cards";
+      card.querySelector("#seatBottomName").textContent = hand.bottom.length === 5 ? evaluate5(hand.bottom).name : "5 cards";
+      card.querySelector("#seatPoolName").textContent = `${hand.pool.length} left`;
+
+      const valid = validateHand(hand);
+      card.querySelector("#seatArrangeNote").innerHTML = valid.ok
+        ? `<span class="win">Valid hand.</span> Tap or drag cards, then submit when ready.`
+        : `<span class="loss">${valid.reason}</span>`;
+
+      card.querySelectorAll("[data-seat-zone]").forEach(zone => {
+        zone.addEventListener("dragover", e => {
+          e.preventDefault();
+          zone.classList.add("drop-hover");
+        });
+
+        zone.addEventListener("dragleave", () => zone.classList.remove("drop-hover"));
+
+        zone.addEventListener("drop", e => {
+          e.preventDefault();
+          zone.classList.remove("drop-hover");
+          if (!draggedId) return;
+          moveCard(draggedId, zone.dataset.seatZone);
+          draggedId = null;
+        });
+
+        zone.addEventListener("click", e => {
+          const clickedCard = e.target.closest(".seat-playing-card");
+          if (clickedCard) return;
+          if (!selectedCardId) return;
+          moveCard(selectedCardId, zone.dataset.seatZone);
+        });
+      });
+
+      const autoBtn = card.querySelector("#seatAutoArrangeBtn");
+      const clearBtn = card.querySelector("#seatClearLayoutBtn");
+      const submitBtn = card.querySelector("#seatSubmitHandBtn");
+
+      autoBtn?.addEventListener("click", e => { e.stopPropagation(); autoArrangeMySeat(); });
+      clearBtn?.addEventListener("click", e => { e.stopPropagation(); clearMyLayout(); });
+      submitBtn?.addEventListener("click", e => { e.stopPropagation(); submitHand(); });
+    }
+
+    function renderSeatCards(container, cards, draggable) {
+      if (!container) return;
+      container.innerHTML = "";
+      sortCards(cards).forEach(card => {
+        const div = document.createElement("div");
+        div.className = "seat-playing-card" + (card.suit === "♥" || card.suit === "♦" ? " red" : "") + (selectedCardId === card.id ? " selected" : "");
+        div.draggable = draggable;
+        div.dataset.id = card.id;
+        div.innerHTML = `<span class="rank">${card.rank}</span><span class="suit">${card.suit}</span>`;
+        if (draggable) {
+          div.addEventListener("dragstart", () => draggedId = card.id);
+          div.addEventListener("click", e => {
+            e.stopPropagation();
+            selectedCardId = selectedCardId === card.id ? null : card.id;
+            renderRoom();
+          });
+        }
+        container.appendChild(div);
+      });
     }
 
     function renderScoringCard() {
@@ -1230,7 +1448,6 @@
         }
 
         if (state.status === "arranging") {
-          document.getElementById("mainArrangeBoard")?.scrollIntoView({ behavior: "smooth", block: "start" });
           return;
         }
 
@@ -1307,7 +1524,6 @@
       });
 
       await refreshState();
-      document.getElementById("mainArrangeBoard")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     async function revealShowdown() {
@@ -1359,9 +1575,7 @@
         ? `<span class="win">Valid hand.</span> Click Submit Hand when ready.`
         : `<span class="loss">${valid.reason}</span>`;
 
-      if (state?.status === "arranging" && !state?.my_submitted) {
-        renderMainArrange(hand);
-      }
+      // Inline seat arrangement is now the primary arrangement UI.
     }
 
     function moveCard(cardId, targetZone) {
@@ -1379,7 +1593,9 @@
 
       if (!card) return;
 
-      const limit = Number(document.querySelector(`[data-zone="${targetZone}"]`).dataset.limit);
+      const limits = { top: 3, middle: 5, bottom: 5, pool: 13 };
+      const limit = limits[targetZone] ?? 13;
+
       if (hand[targetZone].length >= limit) {
         hand.pool.push(card);
         alert("That row is full.");
@@ -1389,10 +1605,7 @@
 
       setMyHandForArrange(hand);
       selectedCardId = null;
-      renderArrange(hand);
-      if (state?.status === "arranging" && !state?.my_submitted) {
-        renderMainArrange(hand);
-      }
+      renderRoom();
     }
 
     function autoArrangeMySeat() {
@@ -1401,10 +1614,7 @@
       const arranged = autoArrange(all);
       setMyHandForArrange(arranged);
       selectedCardId = null;
-      renderArrange(arranged);
-      if (state?.status === "arranging" && !state?.my_submitted) {
-        renderMainArrange(arranged);
-      }
+      renderRoom();
     }
 
     function clearMyLayout() {
@@ -1415,10 +1625,7 @@
       hand.bottom = [];
       setMyHandForArrange(hand);
       selectedCardId = null;
-      renderArrange(hand);
-      if (state?.status === "arranging" && !state?.my_submitted) {
-        renderMainArrange(hand);
-      }
+      renderRoom();
     }
 
     async function submitHand() {
