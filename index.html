@@ -841,22 +841,25 @@
       const submittedCount = joined.filter(s => state.players?.[s]?.submitted).length;
       updateTimerUI();
 
+      const roomMessage = el("roomMessage");
+      roomMessage.style.display = state.status === "showdown" ? "none" : "block";
+
       if (state.status === "lobby") {
-        el("roomMessage").innerHTML = `
+        roomMessage.innerHTML = `
           <strong>Lobby:</strong> ${joined.length}/4 seats joined.
           ${me.seat === "banker" ? "As banker, click Scoring when ready to start the round." : "Wait for the banker to start the round."}
         `;
       } else if (state.status === "arranging") {
-        el("roomMessage").innerHTML = `
+        roomMessage.innerHTML = `
           <strong>Arrange phase:</strong> everyone should arrange their cards.
           Submitted: ${submittedCount}/${joined.length}.
         `;
       } else if (state.status === "waiting") {
-        el("roomMessage").innerHTML = `
+        roomMessage.innerHTML = `
           <strong>Waiting:</strong> all joined players submitted. Banker may open Showdown from Scoring.
         `;
       } else {
-        el("roomMessage").innerHTML = `<strong>Showdown:</strong> all submitted hands are now visible below. No popup needed.<br>${renderInlineScoreSummary()}`;
+        roomMessage.innerHTML = "";
       }
     }
 
@@ -969,13 +972,12 @@
         }
 
         if (state.status === "showdown") {
-          el("roomMessage").innerHTML = `<strong>Showdown:</strong> all cards are already flipped up on the table.<br>${renderInlineScoreSummary()}`;
           return;
         }
       }
 
       if (state.status === "showdown") {
-        el("roomMessage").innerHTML = `<strong>Showdown:</strong> all cards are already flipped up on the table.<br>${renderInlineScoreSummary()}`;
+        return;
       } else {
         alert("Hidden until showdown.");
       }
@@ -1015,7 +1017,7 @@
       }
 
       if (state.status === "showdown") {
-        el("roomMessage").innerHTML = `<strong>Showdown:</strong> all cards are already flipped up on the table.<br>${renderInlineScoreSummary()}`;
+        return;
       }
     }
 
