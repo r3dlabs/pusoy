@@ -569,6 +569,7 @@
     <!-- action panels -->
     <div id="homeActionsFred" style="display:none;" class="felt-actions">
       <button class="btn btn-primary btn-lg" id="btnCreate">Create Room as Banker</button>
+      <button class="btn btn-bad" id="btnResetDbHome">⚠ Reset DB</button>
     </div>
     <div id="homeActionsPlayer" style="display:none;" class="felt-actions">
       <button class="btn btn-primary btn-lg" id="btnJoinPlayer">Join Game</button>
@@ -868,6 +869,14 @@ function subscribeRealtime(){
 // BUTTON WIRING
 // ----------------------------------------------------------
 el('btnCreate').onclick=createRoom;
+el('btnResetDbHome').onclick=async()=>{
+  const ok=await showConfirm('Clear all player seats and cards? Banker stays.',{title:'Reset DB',confirmLabel:'Reset',confirmCls:'btn-bad'});
+  if(!ok)return;
+  // Need a token — only works if Fred has an active session
+  if(!me){toast('Create the room first, then reset.','warn');return;}
+  await rpc('clear_pusoy_room_seats',{p_room_code:me.roomCode,p_player_token:me.token});
+  toast('Room reset — seats cleared.','success');
+};
 el('btnJoinPlayer').onclick=joinRoomAsPlayer;
 el('btnCopyCode').onclick=()=>{navigator.clipboard?.writeText(me.roomCode);toast('Code copied: '+me.roomCode,'success');};
 el('btnLeave').onclick=leaveRoom;
