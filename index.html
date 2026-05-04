@@ -471,18 +471,18 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // THEME
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 let isDark=true;
 const themeBtn=document.getElementById('themeBtn');
 function applyTheme(d){document.documentElement.setAttribute('data-theme',d?'dark':'light');document.getElementById('themeIco').textContent=d?'☀️':'🌙';document.getElementById('themeLbl').textContent=d?'Light':'Dark';}
 applyTheme(isDark);
 themeBtn.addEventListener('click',()=>{isDark=!isDark;applyTheme(isDark);});
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // TOAST
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 function toast(msg,type='',ms=3000){
   const c=document.getElementById('toast-wrap'),t=document.createElement('div');
   t.className='toast'+(type?' t-'+type:'');t.textContent=msg;
@@ -491,9 +491,9 @@ function toast(msg,type='',ms=3000){
   setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),220);},ms);
 }
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // DIALOG
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 const dlgOverlay=document.getElementById('dlg-overlay');
 function _dlg({icon='',title='',msg='',buttons=[],extraHtml=''}){
   return new Promise(res=>{
@@ -529,9 +529,9 @@ function showConfirm(msg,{title='Confirm',icon='⚠',confirmLabel='Confirm',conf
 }
 dlgOverlay.addEventListener('click',e=>{if(e.target===dlgOverlay)dlgOverlay.classList.remove('open');});
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // SUPABASE + GAME CONSTANTS
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 const SUPABASE_URL="https://kappyxsapcrldmfpswbx.supabase.co";
 const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImthcHB5eHNhcGNybGRtZnBzd2J4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNjI0MzYsImV4cCI6MjA4OTkzODQzNn0.BWBia4jtkXIFtpn2au0X4Wdcvg4faqjc_93wXWlO_w4";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
@@ -543,27 +543,27 @@ const SEAT_NAMES={banker:"Banker",player1:"Player 1",player2:"Player 2",player3:
 const SEAT_ORDER=["banker","player1","player2","player3"];
 const POLL_MS=10000, ARRANGE_SECS=90;
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // STATE
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 let state=null,me=null,dragId=null,selCardId=null;
 let roomCh=null,pollTmr=null,tickTmr=null,autoSubbing=false;
 let sdActivePlayer=null; // which player tab is open in showdown
 
 const el=id=>document.getElementById(id);
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // SUPABASE RPC
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 async function rpc(fn,args){
   const{data,error}=await sb.rpc(fn,args);
   if(error){console.error(fn,error);await showAlert(error.message||'Supabase error',{title:'Error',type:'error'});throw error;}
   return data;
 }
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // SCREEN ROUTING
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   el(id).classList.add('active');
@@ -607,9 +607,9 @@ function updateHeaderBtns(){
   el('btnResetDb').style.display=isBanker?'':'none';
 }
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // REFRESH
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 async function refresh(){
   if(!me)return;
   state=await rpc('get_pusoy_my_state',{p_room_code:me.roomCode,p_player_token:me.token});
@@ -635,9 +635,9 @@ function subscribeRealtime(){
     .subscribe();
 }
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // BUTTON WIRING
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 el('btnCreate').onclick=createRoom;
 el('btnJoinOpen').onclick=()=>el('joinBox').classList.toggle('open');
 el('btnJoin').onclick=joinRoom;
@@ -653,9 +653,9 @@ el('btnSubmit').onclick=doSubmit;
 el('btnNewRound').onclick=async()=>{await bankerStartRound();};
 el('btnBackLobby').onclick=async()=>{await rpc('reset_pusoy_lobby',{p_room_code:me.roomCode,p_player_token:me.token});await refresh();};
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // STATIC PLAYERS
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 const PLAYERS=[
   {id:'fred',   name:'Fred'},
   {id:'arianne',name:'Arianne'},
@@ -729,9 +729,9 @@ function promptFredPassword(){
 
 renderPlayerPicker();
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // CREATE / JOIN / LEAVE
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 function requireName(){
   if(!selectedPlayer){toast('Pick a player first','error');return null;}
   return selectedPlayer.name;
@@ -765,9 +765,9 @@ async function leaveRoom(){
   showScreen('homeScreen');
 }
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // BANKER ACTIONS
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 async function bankerNewDeal(){
   if(me?.seat!=='banker')return;
   if(state?.status==='arranging'){toast('Round already in progress','warn');return;}
@@ -801,9 +801,9 @@ async function bankerResetDb(){
   selCardId=null;await refresh();toast('Room reset','success');
 }
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // LOBBY RENDER
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 function joinedSeats(){return SEAT_ORDER.filter(s=>state.players?.[s]?.joined);}
 
 function playerIdFromName(name){
@@ -855,30 +855,9 @@ function renderLobby(){
   }
 }
 
-  const joined=joinedSeats();
-  const sub=joined.filter(s=>state.players?.[s]?.submitted);
-  el('lobbyStatus').innerHTML=`<strong>${joined.length}/4</strong> seats filled · <strong>${sub.length}/${joined.length}</strong> submitted`;
-
-  const acts=el('lobbyActions');acts.innerHTML='';
-  if(me.seat==='banker'){
-    const btn=document.createElement('button');
-    btn.className='btn btn-primary btn-lg';
-    btn.textContent=state.status==='lobby'?'Start Deal':'New Deal';
-    btn.onclick=bankerNewDeal;
-    acts.appendChild(btn);
-
-    if(state.status==='waiting'){
-      const rb=document.createElement('button');
-      rb.className='btn btn-win btn-lg';rb.textContent='Reveal Showdown';
-      rb.onclick=async()=>{await rpc('reveal_pusoy_showdown',{p_room_code:me.roomCode,p_player_token:me.token});await refresh();};
-      acts.appendChild(rb);
-    }
-  }
-}
-
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // ARRANGE RENDER
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 function getHand(){
   const h=state.my_hand||{};
   return{pool:h.private_cards||[],top:h.top_cards||[],middle:h.middle_cards||[],bottom:h.bottom_cards||[]};
@@ -1014,10 +993,10 @@ async function doDeclareLuck(){
   const lucks=detectLuck(hand);
   if(lucks.length===0){await showAlert('No luck conditions detected in this hand.',{title:'No Luck',type:'warn'});return;}
 
-  const luckList=lucks.map(l=>`${l.emoji} ${l.name} — ${l.desc}`).join('\n');
+  const luckList=lucks.map(l=>l.emoji+' '+l.name+' - '+l.desc).join('\n');
   const ok=await showConfirm(
-    `You have ${lucks.length} luck condition${lucks.length>1?'s':''}:\n\n${luckList}\n\nDeclaring luck means you win double if your overall outcome wins. Confirm?`,
-    {title:'⚡ Declare Luck',icon:'⚡',confirmLabel:'Declare Luck!',confirmCls:'btn-primary'}
+    'You have '+lucks.length+' luck condition'+(lucks.length>1?'s':'')+'. '+luckList+' Declaring luck means you win double if your overall outcome wins.',
+    {title:'Declare Luck',icon:'!',confirmLabel:'Declare Luck!',confirmCls:'btn-primary'}
   );
   if(!ok)return;
 
@@ -1050,9 +1029,9 @@ function clearLuckDeclarations(roomCode){
   });
 }
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // WAITING RENDER
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 function renderWaiting(){
   const joined=joinedSeats();
   const sub=joined.filter(s=>state.players?.[s]?.submitted);
@@ -1086,9 +1065,9 @@ function renderWaiting(){
   }
 }
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // SHOWDOWN RENDER
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 function renderShowdown(){
   const isBanker=me.seat==='banker';
   const hands=state.showdown_hands||{};
@@ -1254,9 +1233,9 @@ function renderShowdown(){
   sdDiv.appendChild(grid);
 }
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // AUTO SUBMIT ON TIMEOUT
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 function getSecsLeft(){
   if(!state||state.status!=='arranging')return null;
   const t=state.arrangement_started_at||state.updated_at;
@@ -1278,9 +1257,9 @@ async function tickAutoSubmit(){
   }catch(e){console.warn(e);}finally{autoSubbing=false;}
 }
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // SESSION
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 function saveSession(){localStorage.setItem('pusoy_sess',JSON.stringify(me));}
 
 async function restoreSession(){
@@ -1296,9 +1275,9 @@ async function restoreSession(){
   }catch(e){console.warn(e);localStorage.removeItem('pusoy_sess');me=null;}
 }
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // CARD UTILITIES
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 function makeDeck(){
   const d=[];
   for(const suit of SUITS)for(const rank of RANKS)
@@ -1316,9 +1295,9 @@ function sortCards(cards){return[...cards].sort((a,b)=>b.value-a.value||a.suit.l
 
 function fromHand(info){return{top:info.top_cards||[],middle:info.middle_cards||[],bottom:info.bottom_cards||[],pool:[]};}
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // HAND EVALUATION
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 function countsByRank(cards){const c={};cards.forEach(c2=>c[c2.value]=(c[c2.value]||0)+1);return c;}
 
 function isStraight(values){
@@ -1389,9 +1368,9 @@ function compareVsBanker(player,banker){
   return{outcome,className,details};
 }
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // LUCK EVALUATION
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // Returns array of {name, description} luck conditions found in a hand.
 // hand = {top, middle, bottom} — all cards placed, validated.
 function detectLuck(hand){
@@ -1476,9 +1455,9 @@ function autoArrange(cards){
   return best||{pool:[],bottom:sorted.slice(0,5),middle:sorted.slice(5,10),top:sorted.slice(10,13)};
 }
 
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 // BOOT
-// ══════════════════════════════════════════════════════════
+// ----------------------------------------------------------
 restoreSession();
 
 }); // end DOMContentLoaded
