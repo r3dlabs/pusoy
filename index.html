@@ -1641,54 +1641,67 @@ function detectLuck(hand){
   const lucks=[];
   const all13=[...hand.top,...hand.middle,...hand.bottom];
 
-  // Helper
-  const ev3=evaluate3(hand.top);
-  const evMid=evaluate5(hand.middle);
-  const evBtm=evaluate5(hand.bottom);
+  const ev3  = evaluate3(hand.top);
+  const evMid= evaluate5(hand.middle);
+  const evBtm= evaluate5(hand.bottom);
 
-  // 1. Trips on Top (3-card top row, valid arrangement)
-  if(ev3.category===3){
-    lucks.push({name:'Trips on Top',desc:`Three of a Kind on top — ${hand.top.map(c=>c.rank+c.suit).join(' ')}`,emoji:'🃏'});
-  }
+  // 1. QUADS — Four of a Kind on any lane
+  if(evMid.category===7) lucks.push({name:'Quads (Middle)', desc:'Four of a Kind in the middle row', emoji:'💥'});
+  if(evBtm.category===7) lucks.push({name:'Quads (Bottom)', desc:'Four of a Kind in the bottom row', emoji:'💥'});
+  // top is only 3 cards — quads impossible
 
-  // 2. Straight on any row
-  if(evMid.category===4){lucks.push({name:'Straight (Middle)',desc:`Straight in the middle row`,emoji:'🔗'});}
-  if(evBtm.category===4){lucks.push({name:'Straight (Bottom)',desc:`Straight on the bottom row`,emoji:'🔗'});}
-  // Top can't have a straight (only 3 cards)
-
-  // 3. Flush on any row
-  if(evMid.category===5){lucks.push({name:'Flush (Middle)',desc:`Flush in the middle row`,emoji:'♠'});}
-  if(evBtm.category===5){lucks.push({name:'Flush (Bottom)',desc:`Flush on the bottom row`,emoji:'♠'});}
-  // Top 3-card flush
-  if(hand.top.length===3&&hand.top.every(c=>c.suit===hand.top[0].suit)){
-    lucks.push({name:'Flush (Top)',desc:`Flush on the top row`,emoji:'♠'});
-  }
-
-  // 4. Straight Flush on any row (cat 8 — includes Royal Flush)
-  if(evMid.category===8){lucks.push({name:'Straight Flush (Middle)',desc:evMid.name+' in the middle row',emoji:'🌟'});}
-  if(evBtm.category===8){lucks.push({name:'Straight Flush (Bottom)',desc:evBtm.name+' on the bottom row',emoji:'🌟'});}
+  // 2. STRAIGHT FLUSH — any lane
+  if(evMid.category===8) lucks.push({name:'Straight Flush (Middle)', desc:evMid.name+' in the middle row', emoji:'🌟'});
+  if(evBtm.category===8) lucks.push({name:'Straight Flush (Bottom)', desc:evBtm.name+' in the bottom row', emoji:'🌟'});
+  // top 3-card straight flush: same suit AND consecutive
   if(hand.top.length===3){
     const topFlush=hand.top.every(c=>c.suit===hand.top[0].suit);
     const topVals=hand.top.map(c=>c.value).sort((a,b)=>a-b);
-    const topStr=topVals[2]-topVals[0]===2&&new Set(topVals).size===3;
-    if(topFlush&&topStr){lucks.push({name:'Straight Flush (Top)',desc:`Straight Flush on the top row`,emoji:'🌟'});}
+    const topStr=topVals[2]-topVals[0]===2 && new Set(topVals).size===3;
+    if(topFlush&&topStr) lucks.push({name:'Straight Flush (Top)', desc:'Straight Flush in the top row', emoji:'🌟'});
   }
 
-  // 5. Quads (Four of a Kind) on any row
-  if(evMid.category===7){lucks.push({name:'Quads (Middle)',desc:`Four of a Kind in the middle row`,emoji:'💥'});}
-  if(evBtm.category===7){lucks.push({name:'Quads (Bottom)',desc:`Four of a Kind on the bottom row`,emoji:'💥'});}
+  // 3. FLUSH ALL LANES — flush on top AND middle AND bottom
+  const topFlush3 = hand.top.length===3 && hand.top.every(c=>c.suit===hand.top[0].suit);
+  // flush = cat 5 OR cat 8 (straight flush is also a flush)
+  const midFlush  = evMid.category===5 || evMid.category===8;
+  const btmFlush  = evBtm.category===5 || evBtm.category===8;
+  if(topFlush3 && midFlush && btmFlush){
+    lucks.push({name:'Flush — All Lanes', desc:'All three rows are flushes', emoji:'♠'});
+  }
 
-  // 6. Six Pairs — count pairs across all 13 cards
+  // 4. STRAIGHT ALL LANES — straight on top AND middle AND bottom
+  // top 3-card straight: three consecutive values, no need for flush
+  const topVals3=hand.top.map(c=>c.value).sort((a,b)=>a-b);
+  const topStr3 = hand.top.length===3
+    && topVals3[2]-topVals3[0]===2
+    && new Set(topVals3).size===3;
+  // straight = cat 4, 5 (flush), 8 (str flush) — all contain a straight
+  const midStr = evMid.category>=4;
+  const btmStr = evBtm.category>=4;
+  if(topStr3 && midStr && btmStr){
+    lucks.push({name:'Straight — All Lanes', desc:'All three rows contain a straight or better', emoji:'🔗'});
+  }
+
+  // 5. TRIPS ON TOP
+  if(ev3.category===3){
+    lucks.push({name:'Trips on Top', desc:'Three of a Kind on the top row', emoji:'🃏'});
+  }
+
+  // 6. SIX PAIRS — count pairs across all 13 cards
+  // A Four of a Kind = 1 pair group (not 2), treat quads as 1 pair
   const rankCounts={};
   all13.forEach(c=>rankCounts[c.value]=(rankCounts[c.value]||0)+1);
-  const pairCount=Object.values(rankCounts).filter(n=>n>=2).reduce((acc,n)=>acc+Math.floor(n/2),0);
-  if(pairCount>=6){
-    lucks.push({name:'Six Pairs',desc:`${pairCount} pairs across all 13 cards`,emoji:'👯'});
-  }
+  const pairCount=Object.values(rankCounts).reduce((acc,n)=>{
+    if(n>=4) return acc+1;   // quads count as 1 pair
+    if(n>=2) return acc+Math.floor(n/2);
+    return acc;
+  },0);
+  if(pairCount>=6) lucks.push({name:'Six Pairs', desc:`${pairCount} pairs across all 13 cards`, emoji:'👯'});
 
-  // 7. No People — all 13 cards are 2–10 (no J=11, Q=12, K=13, A=14)
-  if(all13.every(c=>c.value<=10)){
-    lucks.push({name:'No People',desc:`All 13 cards are number cards (2–10), no face cards or aces`,emoji:'🃏'});
+  // 7. NO PEOPLE — all 13 cards are 2–10 or Ace (no J=11, Q=12, K=13)
+  if(all13.every(c=>c.value<=10||c.value===14)){
+    lucks.push({name:'No People', desc:'All 13 cards are number cards (2–10) or Aces — no J, Q, K', emoji:'🃏'});
   }
 
   return lucks;
