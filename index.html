@@ -84,6 +84,23 @@
     .join-box{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-top:4px;}
     .join-box.open{display:grid;gap:10px;}
 
+    /* ── PLAYER PICKER ── */
+    .pick-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+    .player-grid{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;padding:4px 0 8px;}
+    .player-btn{display:flex;flex-direction:column;align-items:center;gap:7px;background:none;border:none;cursor:pointer;padding:4px;border-radius:var(--r);transition:transform .12s;}
+    .player-btn:hover{transform:translateY(-3px);}
+    .player-btn:hover .avatar-ring{border-color:var(--accent);}
+    .player-btn.selected .avatar-ring{border-color:var(--accent);box-shadow:0 0 0 4px rgba(204,0,0,0.15);}
+    .player-btn.selected .avatar-name{color:var(--accent);}
+    .avatar-ring{width:72px;height:72px;border-radius:50%;border:2px solid var(--border);overflow:hidden;transition:border-color .15s,box-shadow .15s;background:var(--surface2);}
+    .avatar-ring img{width:100%;height:100%;object-fit:cover;display:block;}
+    .avatar-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:var(--muted);}
+    .avatar-name{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);transition:color .15s;}
+    .avatar-sm{width:34px;height:34px;border-radius:50%;overflow:hidden;border:1px solid var(--border);flex-shrink:0;background:var(--surface2);}
+    .avatar-sm img{width:100%;height:100%;object-fit:cover;display:block;}
+    .avatar-sm-fb{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:var(--muted);}
+    .seat-row{display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);transition:border-color .15s;}
+
     /* ══════════════════════════════════════════
        LOBBY SCREEN (room overview)
     ══════════════════════════════════════════ */
@@ -93,7 +110,6 @@
 
     /* seat table */
     .seat-table{display:grid;gap:8px;}
-    .seat-row{display:grid;grid-template-columns:28px 1fr 80px 90px 90px;align-items:center;gap:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);transition:border-color .15s;}
     .seat-row.me{border-color:var(--gold-br);background:var(--gold-bg);}
     .seat-row.submitted{border-color:var(--win-br);}
     .seat-icon{font-size:18px;text-align:center;}
@@ -243,6 +259,21 @@
     #dlg-msg{font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:18px;white-space:pre-line;}
     #dlg-btns{display:flex;gap:8px;justify-content:flex-end;}
 
+    .btn-luck{background:linear-gradient(135deg,#7c3aed,#c026d3);border-color:#7c3aed;color:#fff;animation:luckPulse 2s ease-in-out infinite;}
+    .btn-luck:hover{background:linear-gradient(135deg,#6d28d9,#a21caf);border-color:#6d28d9;color:#fff;}
+    @keyframes luckPulse{0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,0.4);}50%{box-shadow:0 0 0 6px rgba(124,58,237,0);}}
+
+    /* luck badge shown in arrange validation area */
+    .luck-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:var(--r);background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(192,38,211,0.15));border:1px solid rgba(124,58,237,0.4);color:#c084fc;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:3px 0;}
+
+    /* luck section in showdown */
+    .luck-section{background:linear-gradient(135deg,rgba(124,58,237,0.08),rgba(192,38,211,0.08));border:1px solid rgba(124,58,237,0.3);border-radius:var(--r);padding:12px 14px;margin-bottom:12px;}
+    .luck-section-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#c084fc;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+    .luck-item{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:#e9d5ff;letter-spacing:.06em;padding:4px 0;display:flex;align-items:center;gap:7px;}
+    .luck-item-desc{font-size:11px;color:#a78bfa;font-weight:400;letter-spacing:.03em;font-family:'Barlow',sans-serif;}
+    .luck-multiplier{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#c084fc;letter-spacing:.04em;}
+    .luck-multiplier span{font-size:13px;color:#a78bfa;font-weight:600;}
+
     /* theme toggle */
     .theme-btn{display:flex;align-items:center;gap:4px;padding:4px 9px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .15s;}
     .theme-btn:hover{border-color:var(--muted);color:var(--text);}
@@ -291,14 +322,12 @@
   <div class="home-wrap">
     <div class="home-hero">
       <h1>PU<span>S</span>OY <span style="color:var(--text)">DOS</span></h1>
-      <p>Online card room — banker deals, players arrange, showdown decides.</p>
+      <p>Pick your player, create or join a room.</p>
     </div>
     <div class="home-card">
-      <div class="fstack">
-        <div>
-          <label class="flabel">Your name</label>
-          <input id="nameInput" type="text" placeholder="e.g. Dad, Kuya, Red"/>
-        </div>
+      <div class="pick-label">Who are you?</div>
+      <div class="player-grid" id="playerPickerGrid"></div>
+      <div id="homeActions" style="display:none;" class="fstack">
         <div class="btn-row">
           <button class="btn btn-primary btn-lg" id="btnCreate">Create Room (Banker)</button>
           <button class="btn btn-lg" id="btnJoinOpen">Join Room ▾</button>
@@ -306,7 +335,7 @@
         <div id="joinBox" class="join-box">
           <div>
             <label class="flabel">Room code</label>
-            <input id="codeInput" type="text" placeholder="4-digit code"/>
+            <input id="codeInput" type="text" placeholder="4-digit code" maxlength="4"/>
           </div>
           <div>
             <label class="flabel">Your seat</label>
@@ -341,6 +370,7 @@
       <div class="arrange-actions">
         <button class="btn btn-ghost" id="btnAutoArrange">Auto Arrange</button>
         <button class="btn btn-ghost" id="btnClearArrange">Clear</button>
+        <button class="btn btn-luck" id="btnDeclareLuck" style="display:none">⚡ Declare Luck</button>
         <button class="btn btn-win btn-lg" id="btnSubmit">Submit Hand</button>
       </div>
     </div>
@@ -461,13 +491,27 @@ function toast(msg,type='',ms=3000){
 // DIALOG
 // ══════════════════════════════════════════════════════════
 const dlgOverlay=document.getElementById('dlg-overlay');
-function _dlg({icon='',title='',msg='',buttons=[]}){
+function _dlg({icon='',title='',msg='',buttons=[],extraHtml=''}){
   return new Promise(res=>{
     document.getElementById('dlg-icon').textContent=icon;
     document.getElementById('dlg-icon').style.display=icon?'block':'none';
     document.getElementById('dlg-title').textContent=title;
     document.getElementById('dlg-msg').textContent=msg;
     const btns=document.getElementById('dlg-btns');btns.innerHTML='';
+    // inject extra HTML (e.g. password input) before buttons
+    const extra=document.getElementById('dlg-extra');
+    if(extra)extra.remove();
+    if(extraHtml){
+      const div=document.createElement('div');
+      div.id='dlg-extra';div.style.marginBottom='12px';
+      div.innerHTML=extraHtml;
+      btns.parentNode.insertBefore(div,btns);
+      // submit on enter
+      setTimeout(()=>{
+        const inp=document.getElementById('fredPwInput');
+        if(inp){inp.focus();inp.onkeydown=e=>{if(e.key==='Enter'){btns.querySelector('.btn-primary')?.click();}};} 
+      },50);
+    }
     buttons.forEach(b=>{const btn=document.createElement('button');btn.className='btn '+(b.cls||'btn-ghost');btn.textContent=b.label;btn.onclick=()=>{dlgOverlay.classList.remove('open');res(b.val);};btns.appendChild(btn);});
     dlgOverlay.classList.add('open');
   });
@@ -528,7 +572,10 @@ function routeToCurrentState(){
   const st=state.status;
   if(st==='lobby'){renderLobby();showScreen('lobbyScreen');return;}
   if(st==='arranging'){
-    if(state.my_submitted){renderWaiting();showScreen('waitingScreen');}
+    // Use hand-level submitted as source of truth, fall back to player-level
+    const handSubmitted=state.my_hand?.submitted===true;
+    const playerSubmitted=state.my_submitted===true;
+    if(handSubmitted||playerSubmitted){renderWaiting();showScreen('waitingScreen');}
     else{renderArrange();showScreen('arrangeScreen');}
     return;
   }
@@ -540,7 +587,9 @@ function updateHeaderChips(){
   if(!me)return;
   el('hdrChips').classList.add('active');
   el('hdrCode').textContent=me.roomCode;
-  el('hdrMe').textContent=me.name;
+  const pid=me.playerId||'';
+  const pname=me.name||'';
+  el('hdrMe').innerHTML=avatarHtml(pid,pname,'sm')+'&nbsp;'+pname;
   el('hdrStatusChip').textContent=state?.status||'';
   el('hdrBtns').style.display='flex';
 }
@@ -595,23 +644,99 @@ el('btnResetLobby').onclick=bankerResetLobby;
 el('btnResetDb').onclick=bankerResetDb;
 el('btnAutoArrange').onclick=doAutoArrange;
 el('btnClearArrange').onclick=doClearArrange;
+el('btnDeclareLuck').onclick=doDeclareLuck;
 el('btnSubmit').onclick=doSubmit;
 el('btnNewRound').onclick=async()=>{await bankerStartRound();};
 el('btnBackLobby').onclick=async()=>{await rpc('reset_pusoy_lobby',{p_room_code:me.roomCode,p_player_token:me.token});await refresh();};
 
 // ══════════════════════════════════════════════════════════
+// STATIC PLAYERS
+// ══════════════════════════════════════════════════════════
+const PLAYERS=[
+  {id:'fred',   name:'Fred'},
+  {id:'arianne',name:'Arianne'},
+  {id:'dave',   name:'Dave'},
+  {id:'skai',   name:'Skai'},
+  {id:'joe',    name:'Joe'},
+  {id:'ben',    name:'Ben'},
+];
+
+let selectedPlayer=null; // {id, name}
+
+function avatarUrl(id){return `${id}.png`;}
+
+function avatarHtml(id,name,size='sm'){
+  if(size==='sm'){
+    return `<div class="avatar-sm">
+      <img src="${avatarUrl(id)}" alt="${name}" onerror="this.parentNode.innerHTML='<div class=\\'avatar-sm-fb\\'>${name[0]}</div>'"/>
+    </div>`;
+  }
+  return `<div class="avatar-ring">
+    <img src="${avatarUrl(id)}" alt="${name}" onerror="this.parentNode.innerHTML='<div class=\\'avatar-fallback\\'>${name[0]}</div>'"/>
+  </div>`;
+}
+
+const FRED_PASS='!r0nM@n';
+let fredUnlocked=false;
+
+function renderPlayerPicker(){
+  const grid=el('playerPickerGrid');
+  grid.innerHTML='';
+  PLAYERS.forEach(p=>{
+    const btn=document.createElement('button');
+    btn.className='player-btn'+(selectedPlayer?.id===p.id?' selected':'');
+    btn.innerHTML=avatarHtml(p.id,p.name,'lg')+`<span class="avatar-name">${p.name}</span>`;
+    btn.onclick=()=>{
+      if(p.id==='fred'&&!fredUnlocked){
+        promptFredPassword();
+        return;
+      }
+      selectedPlayer=p;
+      renderPlayerPicker();
+      el('homeActions').style.display='block';
+    };
+    grid.appendChild(btn);
+  });
+}
+
+function promptFredPassword(){
+  _dlg({
+    icon:'🔒',
+    title:'Fred',
+    msg:'Enter password to continue as Fred.',
+    buttons:[
+      {label:'Cancel',cls:'btn-ghost',val:null},
+      {label:'Unlock',cls:'btn-primary',val:'submit'}
+    ],
+    extraHtml:'<input id="fredPwInput" type="password" placeholder="Password" style="margin-bottom:4px;"/>'
+  }).then(val=>{
+    if(!val)return;
+    const pw=document.getElementById('fredPwInput')?.value||'';
+    if(pw===FRED_PASS){
+      fredUnlocked=true;
+      selectedPlayer=PLAYERS.find(p=>p.id==='fred');
+      renderPlayerPicker();
+      el('homeActions').style.display='block';
+    } else {
+      toast('Wrong password','error');
+    }
+  });
+}
+
+renderPlayerPicker();
+
+// ══════════════════════════════════════════════════════════
 // CREATE / JOIN / LEAVE
 // ══════════════════════════════════════════════════════════
 function requireName(){
-  const v=el('nameInput').value.trim().slice(0,24);
-  if(!v){toast('Enter your name first','error');el('nameInput').focus();return null;}
-  return v;
+  if(!selectedPlayer){toast('Pick a player first','error');return null;}
+  return selectedPlayer.name;
 }
 
 async function createRoom(){
   const name=requireName();if(!name)return;
   const d=await rpc('create_pusoy_room',{p_name:name});
-  me={roomCode:d.room_code,seat:d.seat,token:d.player_token,name};
+  me={roomCode:d.room_code,seat:d.seat,token:d.player_token,name,playerId:selectedPlayer.id};
   saveSession();await refresh();subscribeRealtime();startPolling();
 }
 
@@ -621,16 +746,18 @@ async function joinRoom(){
   if(!code){toast('Enter a room code','warn');return;}
   const seat=el('seatSel').value;
   const d=await rpc('join_pusoy_room',{p_room_code:code,p_name:name,p_seat:seat});
-  me={roomCode:d.room_code,seat:d.seat,token:d.player_token,name};
+  me={roomCode:d.room_code,seat:d.seat,token:d.player_token,name,playerId:selectedPlayer.id};
   saveSession();await refresh();subscribeRealtime();startPolling();
 }
 
 async function leaveRoom(){
   if(roomCh){await sb.removeChannel(roomCh);roomCh=null;}
   stopPolling();localStorage.removeItem('pusoy_sess');
-  state=null;me=null;selCardId=null;
+  state=null;me=null;selCardId=null;selectedPlayer=null;fredUnlocked=false;
   el('hdrChips').classList.remove('active');
   el('hdrBtns').style.display='none';
+  renderPlayerPicker();
+  el('homeActions').style.display='none';
   showScreen('homeScreen');
 }
 
@@ -649,6 +776,7 @@ async function bankerStartRound(){
   const joined=joinedSeats(),deck=shuffle(makeDeck()),deals={};
   let off=0;
   joined.forEach(s=>{deals[s]=deck.slice(off,off+13);off+=13;});
+  clearLuckDeclarations(me.roomCode);
   await rpc('start_pusoy_round',{p_room_code:me.roomCode,p_player_token:me.token,p_deals:deals});
   await refresh();
 }
@@ -674,28 +802,54 @@ async function bankerResetDb(){
 // ══════════════════════════════════════════════════════════
 function joinedSeats(){return SEAT_ORDER.filter(s=>state.players?.[s]?.joined);}
 
+function playerIdFromName(name){
+  const p=PLAYERS.find(x=>x.name.toLowerCase()===(name||'').toLowerCase());
+  return p?p.id:'';
+}
+
 function renderLobby(){
   const tbl=el('seatTable');tbl.innerHTML='';
   SEAT_ORDER.forEach(seat=>{
     const p=state.players?.[seat];
     const isMe=me.seat===seat;
-    const icons={banker:'🃏',player1:'👤',player2:'👤',player3:'👤'};
     const row=document.createElement('div');
     row.className='seat-row'+(isMe?' me':'')+(p?.submitted?' submitted':'');
+    const pid=p?playerIdFromName(p.name):'';
+    const avHtml=p
+      ?`<div class="avatar-sm"><img src="${avatarUrl(pid)}" alt="${p.name}" onerror="this.parentNode.innerHTML='<div class=\\'avatar-sm-fb\\'>${p.name[0]}</div>'"/></div>`
+      :`<div class="avatar-sm"><div class="avatar-sm-fb">?</div></div>`;
     let badgeTxt='Empty',badgeCls='';
     if(seat==='banker'&&p){badgeTxt='Host';badgeCls='b-host';}
     if(p?.submitted){badgeTxt='Ready ✓';badgeCls='b-ready';}
     if(isMe&&!p?.submitted){badgeTxt='You';badgeCls='b-you';}
-    row.innerHTML=`
-      <div class="seat-icon">${p?icons[seat]:'○'}</div>
+    row.innerHTML=`${avHtml}
       <div class="seat-info">
         <div class="seat-name-big">${p?p.name:SEAT_NAMES[seat]}</div>
         <div class="seat-role-txt">${SEAT_NAMES[seat]}${!p?' — Empty':''}</div>
       </div>
-      <div class="seat-badge ${badgeCls}">${badgeTxt}</div>
-    `;
+      <div class="seat-badge ${badgeCls}">${badgeTxt}</div>`;
     tbl.appendChild(row);
   });
+
+  const joined=joinedSeats();
+  const sub=joined.filter(s=>state.players?.[s]?.submitted);
+  el('lobbyStatus').innerHTML=`<strong>${joined.length}/4</strong> seats filled · <strong>${sub.length}/${joined.length}</strong> submitted`;
+
+  const acts=el('lobbyActions');acts.innerHTML='';
+  if(me.seat==='banker'){
+    const btn=document.createElement('button');
+    btn.className='btn btn-primary btn-lg';
+    btn.textContent=state.status==='lobby'?'Start Deal':'New Deal';
+    btn.onclick=bankerNewDeal;
+    acts.appendChild(btn);
+    if(state.status==='waiting'){
+      const rb=document.createElement('button');
+      rb.className='btn btn-win btn-lg';rb.textContent='Reveal Showdown';
+      rb.onclick=async()=>{await rpc('reveal_pusoy_showdown',{p_room_code:me.roomCode,p_player_token:me.token});await refresh();};
+      acts.appendChild(rb);
+    }
+  }
+}
 
   const joined=joinedSeats();
   const sub=joined.filter(s=>state.players?.[s]?.submitted);
@@ -732,7 +886,11 @@ function setHand(hand){
 
 function renderArrange(){
   const hand=getHand();
-  el('arrangePlayerName').innerHTML=`${me.name} <span>— Arrange</span>`;
+  const pid=me.playerId||playerIdFromName(me.name)||'';
+  el('arrangePlayerName').innerHTML=`<span style="display:inline-flex;align-items:center;gap:10px;">
+    <img src="${avatarUrl(pid)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'"/>
+    ${me.name} <span>— Arrange</span>
+  </span>`;
 
   renderZone('dropTop',hand.top,'top',3);
   renderZone('dropMid',hand.middle,'middle',5);
@@ -750,8 +908,23 @@ function renderArrange(){
 
   const v=validateHand(hand);
   const vEl=el('arrangeValidation');
-  if(v.ok){vEl.style.color='var(--win)';vEl.textContent='✓ Valid — ready to submit';}
-  else{vEl.style.color='var(--muted)';vEl.textContent=v.reason;}
+
+  if(v.ok){
+    const lucks=detectLuck(hand);
+    let html=`<span style="color:var(--win);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">✓ Valid — ready to submit</span>`;
+    if(lucks.length>0){
+      html+=`<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">`;
+      lucks.forEach(l=>{html+=`<span class="luck-badge">${l.emoji} ${l.name}</span>`;});
+      html+=`</div>`;
+      el('btnDeclareLuck').style.display='';
+    } else {
+      el('btnDeclareLuck').style.display='none';
+    }
+    vEl.innerHTML=html;
+  } else {
+    vEl.innerHTML=`<span style="color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">${v.reason}</span>`;
+    el('btnDeclareLuck').style.display='none';
+  }
 }
 
 function renderZone(containerId,cards,zone,limit){
@@ -830,11 +1003,47 @@ function doClearArrange(){
   setHand(h);selCardId=null;renderArrange();
 }
 
-async function doSubmit(){
+async function doDeclareLuck(){
+  const hand=getHand();
+  const v=validateHand(hand);
+  if(!v.ok){await showAlert('Arrange your hand completely first.',{title:'Not Ready',type:'warn'});return;}
+  const lucks=detectLuck(hand);
+  if(lucks.length===0){await showAlert('No luck conditions detected in this hand.',{title:'No Luck',type:'warn'});return;}
+
+  const luckList=lucks.map(l=>`${l.emoji} ${l.name} — ${l.desc}`).join('\n');
+  const ok=await showConfirm(
+    `You have ${lucks.length} luck condition${lucks.length>1?'s':''}:\n\n${luckList}\n\nDeclaring luck means you win double if your overall outcome wins. Confirm?`,
+    {title:'⚡ Declare Luck',icon:'⚡',confirmLabel:'Declare Luck!',confirmCls:'btn-primary'}
+  );
+  if(!ok)return;
+
+  // Store luck declaration locally (keyed by roomCode + seat)
+  const luckKey=`pusoy_luck_${me.roomCode}_${me.seat}`;
+  localStorage.setItem(luckKey,JSON.stringify(lucks));
+  toast(`Luck declared! ${lucks.map(l=>l.emoji+' '+l.name).join(', ')}`,'success',5000);
+
+  // Submit the hand with luck declared
+  await doSubmit(true);
+}
+
+async function doSubmit(withLuck=false){
   const hand=getHand(),v=validateHand(hand);
   if(!v.ok){await showAlert(v.reason,{title:'Cannot Submit',type:'error'});return;}
   await rpc('submit_pusoy_hand',{p_room_code:me.roomCode,p_player_token:me.token,p_top:hand.top,p_middle:hand.middle,p_bottom:hand.bottom});
   await refresh();
+}
+
+function getLuckDeclaration(roomCode,seat){
+  try{
+    const raw=localStorage.getItem(`pusoy_luck_${roomCode}_${seat}`);
+    return raw?JSON.parse(raw):[];
+  }catch{return[];}
+}
+
+function clearLuckDeclarations(roomCode){
+  ['banker','player1','player2','player3'].forEach(s=>{
+    localStorage.removeItem(`pusoy_luck_${roomCode}_${s}`);
+  });
 }
 
 // ══════════════════════════════════════════════════════════
@@ -844,14 +1053,18 @@ function renderWaiting(){
   const joined=joinedSeats();
   const sub=joined.filter(s=>state.players?.[s]?.submitted);
   el('waitingTitle').textContent='Hand Submitted ✓';
+
+  // Show luck declarations if any
+  const myLucks=getLuckDeclaration(me.roomCode,me.seat);
+  const luckNote=myLucks.length>0
+    ?`<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">${myLucks.map(l=>`<span class="luck-badge">${l.emoji} ${l.name}</span>`).join('')}</div>`
+    :'';
   if(me.seat==='banker'&&state.status==='waiting'){
-    el('waitingSub').textContent='All players submitted. Click Reveal Showdown to begin.';
+    el('waitingSub').innerHTML='All players submitted. Click Reveal Showdown to begin.'+luckNote;
     el('waitingBadge').textContent='Ready to Reveal';
     el('waitingBadge').style.cssText='background:var(--win-bg);border-color:var(--win-br);color:var(--win);';
-    // show reveal button
-    const acts=el('lobbyActions');
   } else {
-    el('waitingSub').textContent=`Submitted ${sub.length} of ${joined.length} players. Waiting for banker to reveal.`;
+    el('waitingSub').innerHTML=`Submitted ${sub.length} of ${joined.length} players. Waiting for banker to reveal.`+luckNote;
     el('waitingBadge').textContent=`${sub.length}/${joined.length} Submitted`;
   }
 
@@ -896,7 +1109,12 @@ function renderShowdown(){
   visiblePlayers.forEach(seat=>{
     const tab=document.createElement('button');
     tab.className='ptab'+(seat===sdActivePlayer?' active':'');
-    tab.textContent=hands[seat]?.name||SEAT_NAMES[seat];
+    const pname=hands[seat]?.name||SEAT_NAMES[seat];
+    const pid=playerIdFromName(pname);
+    tab.innerHTML=`<span style="display:inline-flex;align-items:center;gap:7px;">
+      <img src="${avatarUrl(pid)}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.2);" onerror="this.style.display='none'"/>
+      ${pname}
+    </span>`;
     tab.onclick=()=>{sdActivePlayer=seat;renderShowdown();};
     tabs.appendChild(tab);
   });
@@ -910,11 +1128,63 @@ function renderShowdown(){
   const bankerHand=fromHand(bankerInfo);
   const result=compareVsBanker(playerHand,bankerHand);
 
+  // Read luck declarations for this matchup
+  const playerLucks=getLuckDeclaration(me.roomCode,sdActivePlayer);
+  const bankerLucks=getLuckDeclaration(me.roomCode,'banker');
+  // Re-evaluate luck from actual cards (source of truth for showdown display)
+  const actualPlayerLucks=detectLuck(playerHand);
+  const actualBankerLucks=detectLuck(bankerHand);
+
+  // A luck declaration is valid if the player actually has the luck AND declared it
+  const playerLuckValid=playerLucks.length>0&&actualPlayerLucks.length>0;
+  const bankerLuckValid=bankerLucks.length>0&&actualBankerLucks.length>0;
+
+  // Multiplier: ×2 if the winning side declared luck; ×4 if both declared luck
+  let multiplier=1;
+  const playerWon=result.className==='win';
+  const bankerWon=result.className==='loss';
+  const push=result.className==='push';
+  if(!push){
+    if(playerWon&&playerLuckValid) multiplier*=2;
+    if(bankerWon&&bankerLuckValid) multiplier*=2;
+    // Both declared and player wins: both lucks count (×2 each = ×4 total feels excessive — standard is ×2 per luck)
+    if(playerLuckValid&&bankerLuckValid) multiplier=4; // rare but spec'd
+  }
+
+  const multiplierTxt=multiplier>1?` × ${multiplier} (Luck)`:'';
+  const outcomeWithMult=result.outcome+(multiplier>1?` ×${multiplier}`:'');
+
+  // Luck sections html builder
+  function luckSectionHtml(lucks,who){
+    if(!lucks||lucks.length===0)return'';
+    return`<div class="luck-section">
+      <div class="luck-section-title">⚡ ${who} declared Luck</div>
+      ${lucks.map(l=>`<div class="luck-item">${l.emoji} <span>${l.name} <span class="luck-item-desc">— ${l.desc}</span></span></div>`).join('')}
+    </div>`;
+  }
+
+  const sdDiv=el('sdContent');
+  sdDiv.innerHTML='';
+
   // Result banner
-  let bannerHtml=`<div class="sd-result-banner">
-    <div class="sd-result-big ${result.className}">${result.outcome}</div>
+  const banner=document.createElement('div');
+  banner.className='sd-result-banner';
+  banner.innerHTML=`
+    <div class="sd-result-big ${result.className}">${outcomeWithMult}</div>
     <div class="sd-result-sub">${result.details.join(' &nbsp;·&nbsp; ')}</div>
-  </div>`;
+    ${multiplier>1?`<div class="luck-multiplier" style="margin-top:10px;">⚡ ${multiplier}× Wager <span>— Luck declared</span></div>`:''}
+  `;
+  sdDiv.appendChild(banner);
+
+  // Luck sections
+  if(playerLuckValid||bankerLuckValid){
+    const luckWrap=document.createElement('div');
+    luckWrap.style.display='grid';luckWrap.style.gap='8px';luckWrap.style.marginBottom='12px';
+    luckWrap.innerHTML=
+      luckSectionHtml(actualBankerLucks,bankerInfo.name||'Banker')+
+      luckSectionHtml(actualPlayerLucks,playerInfo.name||SEAT_NAMES[sdActivePlayer]);
+    sdDiv.appendChild(luckWrap);
+  }
 
   // Side by side rows
   const rowDefs=[
@@ -923,23 +1193,30 @@ function renderShowdown(){
     {label:'Bottom',limit:5,pCards:playerHand.bottom,bCards:bankerHand.bottom,pEval:evaluate5(playerHand.bottom),bEval:evaluate5(bankerHand.bottom)},
   ];
 
-  const sdDiv=el('sdContent');
-  sdDiv.innerHTML='';
-
-  // Banner
-  const banner=document.createElement('div');
-  banner.innerHTML=bannerHtml;
-  sdDiv.appendChild(banner.firstElementChild);
-
   // Grid
   const grid=document.createElement('div');
   grid.className='sd-grid';
 
+  const bankerPid=playerIdFromName(bankerInfo.name||'');
+  const playerPid=playerIdFromName(playerInfo.name||'');
+
   const leftCol=document.createElement('div');
-  leftCol.innerHTML=`<div class="sd-col-hdr"><span>Banker</span><span class="sd-who">${bankerInfo.name||'Banker'}</span></div>`;
+  leftCol.innerHTML=`<div class="sd-col-hdr">
+    <span>Banker</span>
+    <span class="sd-who" style="display:inline-flex;align-items:center;gap:8px;">
+      <img src="${avatarUrl(bankerPid)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'"/>
+      ${bankerInfo.name||'Banker'}
+    </span>
+  </div>`;
 
   const rightCol=document.createElement('div');
-  rightCol.innerHTML=`<div class="sd-col-hdr"><span>${SEAT_NAMES[sdActivePlayer]}</span><span class="sd-who">${playerInfo.name||SEAT_NAMES[sdActivePlayer]}</span></div>`;
+  rightCol.innerHTML=`<div class="sd-col-hdr">
+    <span>${SEAT_NAMES[sdActivePlayer]}</span>
+    <span class="sd-who" style="display:inline-flex;align-items:center;gap:8px;">
+      <img src="${avatarUrl(playerPid)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'"/>
+      ${playerInfo.name||SEAT_NAMES[sdActivePlayer]}
+    </span>
+  </div>`;
 
   rowDefs.forEach(row=>{
     const cmp=compareEval(row.pEval,row.bEval);
@@ -1007,6 +1284,9 @@ async function restoreSession(){
   if(!raw)return;
   try{
     me=JSON.parse(raw);
+    // Restore selectedPlayer so avatars work after page reload
+    if(me.playerId){selectedPlayer=PLAYERS.find(p=>p.id===me.playerId)||null;}
+    else if(me.name){selectedPlayer=PLAYERS.find(p=>p.name===me.name)||null;}
     await refresh();
     subscribeRealtime();startPolling();
   }catch(e){console.warn(e);localStorage.removeItem('pusoy_sess');me=null;}
@@ -1103,6 +1383,79 @@ function compareVsBanker(player,banker){
   if(wins>losses){outcome=wins===3?'Player Scoops':'Player Wins';className='win';}
   else if(losses>wins){outcome=losses===3?'Banker Scoops':'Banker Wins';className='loss';}
   return{outcome,className,details};
+}
+
+// ══════════════════════════════════════════════════════════
+// LUCK EVALUATION
+// ══════════════════════════════════════════════════════════
+// Returns array of {name, description} luck conditions found in a hand.
+// hand = {top, middle, bottom} — all cards placed, validated.
+function detectLuck(hand){
+  const lucks=[];
+  const all13=[...hand.top,...hand.middle,...hand.bottom];
+
+  // Helper
+  const ev3=evaluate3(hand.top);
+  const evMid=evaluate5(hand.middle);
+  const evBtm=evaluate5(hand.bottom);
+
+  // 1. Trips on Top (3-card top row, valid arrangement)
+  if(ev3.category===3){
+    lucks.push({name:'Trips on Top',desc:`Three of a Kind on top — ${hand.top.map(c=>c.rank+c.suit).join(' ')}`,emoji:'🃏'});
+  }
+
+  // 2. Straight on any row
+  if(evMid.category===4){lucks.push({name:'Straight (Middle)',desc:`Straight in the middle row`,emoji:'🔗'});}
+  if(evBtm.category===4){lucks.push({name:'Straight (Bottom)',desc:`Straight on the bottom row`,emoji:'🔗'});}
+  // Top can't have a straight (only 3 cards)
+
+  // 3. Flush on any row
+  if(evMid.category===5){lucks.push({name:'Flush (Middle)',desc:`Flush in the middle row`,emoji:'♠'});}
+  if(evBtm.category===5){lucks.push({name:'Flush (Bottom)',desc:`Flush on the bottom row`,emoji:'♠'});}
+  // Top 3-card flush
+  if(hand.top.length===3&&hand.top.every(c=>c.suit===hand.top[0].suit)){
+    lucks.push({name:'Flush (Top)',desc:`Flush on the top row`,emoji:'♠'});
+  }
+
+  // 4. Straight Flush on any row (cat 8 — includes Royal Flush)
+  if(evMid.category===8){lucks.push({name:'Straight Flush (Middle)',desc:evMid.name+' in the middle row',emoji:'🌟'});}
+  if(evBtm.category===8){lucks.push({name:'Straight Flush (Bottom)',desc:evBtm.name+' on the bottom row',emoji:'🌟'});}
+  if(hand.top.length===3){
+    const topFlush=hand.top.every(c=>c.suit===hand.top[0].suit);
+    const topVals=hand.top.map(c=>c.value).sort((a,b)=>a-b);
+    const topStr=topVals[2]-topVals[0]===2&&new Set(topVals).size===3;
+    if(topFlush&&topStr){lucks.push({name:'Straight Flush (Top)',desc:`Straight Flush on the top row`,emoji:'🌟'});}
+  }
+
+  // 5. Quads (Four of a Kind) on any row
+  if(evMid.category===7){lucks.push({name:'Quads (Middle)',desc:`Four of a Kind in the middle row`,emoji:'💥'});}
+  if(evBtm.category===7){lucks.push({name:'Quads (Bottom)',desc:`Four of a Kind on the bottom row`,emoji:'💥'});}
+
+  // 6. Six Pairs — count pairs across all 13 cards
+  const rankCounts={};
+  all13.forEach(c=>rankCounts[c.value]=(rankCounts[c.value]||0)+1);
+  const pairCount=Object.values(rankCounts).filter(n=>n>=2).reduce((acc,n)=>acc+Math.floor(n/2),0);
+  if(pairCount>=6){
+    lucks.push({name:'Six Pairs',desc:`${pairCount} pairs across all 13 cards`,emoji:'👯'});
+  }
+
+  // 7. No People — all 13 cards are 2–10 (no J=11, Q=12, K=13, A=14)
+  if(all13.every(c=>c.value<=10)){
+    lucks.push({name:'No People',desc:`All 13 cards are number cards (2–10), no face cards or aces`,emoji:'🃏'});
+  }
+
+  return lucks;
+}
+
+// Check if a hand has any luck — used for the Declare button gating
+function hasLuck(hand){return detectLuck(hand).length>0;}
+
+// Luck multiplier: if either side has luck, that side wins double for the whole matchup
+// Returns {playerLucks, bankerLucks, multiplier, luckyWinner}
+function evaluateLuck(playerHand, bankerHand){
+  const pl=detectLuck(playerHand);
+  const bl=detectLuck(bankerHand);
+  return{playerLucks:pl, bankerLucks:bl};
 }
 
 function autoArrange(cards){
