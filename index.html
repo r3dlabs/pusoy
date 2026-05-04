@@ -581,20 +581,18 @@ function updateHeaderChips(){
   if(!me)return;
   el('hdrChips').classList.add('active');
   el('hdrCode').textContent=me.roomCode;
-  const pid=me.playerId||'';
-  const pname=me.name||'';
-  el('hdrMe').innerHTML=avatarHtml(pid,pname,'sm')+'&nbsp;'+pname;
+  el('hdrMe').textContent=me.name||'';
   el('hdrStatusChip').textContent=state?.status||'';
   el('hdrBtns').style.display='flex';
 }
 
 function updateHeaderBtns(){
-  const isBanker=me?.seat==='banker';
+  const isFred=me?.playerId==='fred';
   const st=state?.status;
-  el('btnNewDeal').style.display=(isBanker&&['lobby','waiting','showdown'].includes(st))?'':'none';
+  el('btnNewDeal').style.display=(isFred&&['lobby','waiting','showdown'].includes(st))?'':'none';
   el('btnNewDeal').textContent=st==='lobby'?'Start Deal':'New Deal';
-  el('btnResetLobby').style.display=(isBanker&&st!=='lobby')?'':'none';
-  el('btnResetDb').style.display=isBanker?'':'none';
+  el('btnResetLobby').style.display=(isFred&&st!=='lobby')?'':'none';
+  el('btnResetDb').style.display=isFred?'':'none';
 }
 
 // ----------------------------------------------------------
@@ -851,7 +849,7 @@ function renderLobby(){
   el('lobbyStatus').innerHTML=`<strong>${joined.length}/4</strong> seats filled · <strong>${sub.length}/${joined.length}</strong> submitted`;
 
   const acts=el('lobbyActions');acts.innerHTML='';
-  if(me.seat==='banker'){
+  if(me?.playerId==='fred'){
     const btn=document.createElement('button');
     btn.className='btn btn-primary btn-lg';
     btn.textContent=state.status==='lobby'?'Start Deal':'New Deal';
@@ -1055,7 +1053,7 @@ function renderWaiting(){
   const luckNote=myLucks.length>0
     ?`<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">${myLucks.map(l=>`<span class="luck-badge">${l.emoji} ${l.name}</span>`).join('')}</div>`
     :'';
-  if(me.seat==='banker'&&state.status==='waiting'){
+  if(me?.playerId==='fred'&&state.status==='waiting'){
     el('waitingSub').innerHTML='All players submitted. Click Reveal Showdown to begin.'+luckNote;
     el('waitingBadge').textContent='Ready to Reveal';
     el('waitingBadge').style.cssText='background:var(--win-bg);border-color:var(--win-br);color:var(--win);';
@@ -1064,10 +1062,10 @@ function renderWaiting(){
     el('waitingBadge').textContent=`${sub.length}/${joined.length} Submitted`;
   }
 
-  // Banker gets a reveal button
+  // Only Fred gets the reveal button
   const existing=el('waitingRevealBtn');
   if(existing)existing.remove();
-  if(me.seat==='banker'&&state.status==='waiting'){
+  if(me?.playerId==='fred'&&state.status==='waiting'){
     const btn=document.createElement('button');
     btn.id='waitingRevealBtn';
     btn.className='btn btn-primary btn-lg';
@@ -1082,18 +1080,18 @@ function renderWaiting(){
 // SHOWDOWN RENDER
 // ----------------------------------------------------------
 function renderShowdown(){
-  const isBanker=me.seat==='banker';
+  const isFred=me?.playerId==='fred';
   const hands=state.showdown_hands||{};
   const players=['player1','player2','player3'].filter(s=>hands[s]);
 
-  // Banker actions
+  // Fred-only actions
   const ba=el('sdBankerActions');
-  if(isBanker){ba.style.display='flex';}
+  if(isFred){ba.style.display='flex';}
   else{ba.style.display='none';}
 
-  // Build tabs — banker sees all players; player sees only themselves
+  // Build tabs — Fred sees all players; player sees only themselves
   const tabs=el('playerTabs');tabs.innerHTML='';
-  const visiblePlayers=isBanker?players:players.filter(s=>s===me.seat);
+  const visiblePlayers=isFred?players:players.filter(s=>s===me.seat);
 
   if(visiblePlayers.length===0){el('sdContent').innerHTML='<p style="color:var(--muted);font-size:14px;">No player hands available.</p>';return;}
 
