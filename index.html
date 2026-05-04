@@ -239,10 +239,10 @@
     /* seat positions as % of table container */
     /* banker: top center */
     .lobby-seat.pos-banker{top:18%;left:50%;}
+    /* player 1: bottom center — in front of banker */
+    .lobby-seat.pos-p1{top:85%;left:50%;}
     /* player 2: mid left */
     .lobby-seat.pos-p2{top:55%;left:14%;}
-    /* player 1: bottom center */
-    .lobby-seat.pos-p1{top:85%;left:50%;}
     /* player 3: mid right */
     .lobby-seat.pos-p3{top:55%;left:86%;}
 
@@ -961,18 +961,18 @@ async function joinRoomAsPlayer(){
   const name=requireName();if(!name)return;
   const code='0067';
   const seats=['player1','player2','player3'];
-  let joined=false;
+  let me_data=null;
   for(const seat of seats){
-    try{
-      const d=await rpc('join_pusoy_room',{p_room_code:code,p_name:name,p_seat:seat});
-      me={roomCode:d.room_code,seat:d.seat,token:d.player_token,name,playerId:selectedPlayer.id};
-      joined=true;break;
-    }catch(e){
-      if(e.message&&e.message.includes('taken'))continue;
-      return;
-    }
+    // Call supabase directly — no error popup on seat taken
+    const{data,error}=await sb.rpc('join_pusoy_room',{p_room_code:code,p_name:name,p_seat:seat});
+    if(!error){me_data=data;break;}
+    // if seat taken, silently try next; any other error, stop
+    if(!error.message?.includes('taken'))break;
   }
-  if(!joined){await showAlert('All player seats are taken. Ask the banker to reset.',{title:'Room Full',type:'warn'});return;}
+  if(!me_data){
+    toast('All seats are taken. Ask the banker to reset.','warn');return;
+  }
+  me={roomCode:me_data.room_code,seat:me_data.seat,token:me_data.player_token,name,playerId:selectedPlayer.id};
   saveSession();await refresh();subscribeRealtime();startPolling();
 }
 
@@ -1061,8 +1061,8 @@ function renderLobby(){
 
   const seatCfg=[
     {seat:'banker', posCls:'pos-banker', szCls:'sz-banker', role:'Banker'},
-    {seat:'player2',posCls:'pos-p2',     szCls:'sz-player', role:'Player 2'},
     {seat:'player1',posCls:'pos-p1',     szCls:'sz-player', role:'Player 1'},
+    {seat:'player2',posCls:'pos-p2',     szCls:'sz-player', role:'Player 2'},
     {seat:'player3',posCls:'pos-p3',     szCls:'sz-player', role:'Player 3'},
   ];
 
