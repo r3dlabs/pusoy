@@ -16,7 +16,7 @@
       --win:#1a7a40; --win-bg:#e8f5ee; --win-br:rgba(26,122,64,0.3);
       --bad:#cc2200; --bad-bg:#fff0ee; --bad-br:rgba(204,34,0,0.3);
       --shadow:0 2px 12px rgba(0,0,0,0.08); --r:8px;
-      --card-w:62px; --card-h:86px;
+      --card-w:72px; --card-h:100px;
     }
     [data-theme="dark"] {
       --bg:#0a0a0f; --surface:#13131a; --surface2:#17171f; --border:#1e1e2e;
@@ -172,8 +172,8 @@
     .pcard:hover{transform:translateY(-4px);box-shadow:0 10px 24px rgba(0,0,0,0.25);}
     .pcard.red .pr,.pcard.red .ps{color:#cc0000;}
     .pcard.black .pr,.pcard.black .ps{color:#111;}
-    .pr{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;line-height:1;display:block;}
-    .ps{font-family:'Barlow Condensed',sans-serif;font-size:16px;line-height:1;display:block;text-align:right;}
+    .pr{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;line-height:1;display:block;}
+    .ps{font-family:'Barlow Condensed',sans-serif;font-size:22px;line-height:1;display:block;text-align:right;}
     .pcard.selected{outline:3px solid var(--accent);transform:translateY(-6px);box-shadow:0 0 0 4px rgba(204,0,0,0.15),0 10px 24px rgba(0,0,0,0.25);}
     .pcard.dim{opacity:.45;transform:none !important;}
 
@@ -291,9 +291,9 @@
 
     /* responsive tweaks */
     @media(max-width:480px){
-      :root{--card-w:54px;--card-h:74px;}
-      .pcard .pr{font-size:17px;}
-      .pcard .ps{font-size:14px;}
+      :root{--card-w:62px;--card-h:86px;}
+      .pcard .pr{font-size:22px;}
+      .pcard .ps{font-size:18px;}
     }
   </style>
 </head>
@@ -531,13 +531,13 @@ const SUITS=["♠","♥","♦","♣"];
 const RANK_VAL=Object.fromEntries(RANKS.map((r,i)=>[r,i+2]));
 const SEAT_NAMES={banker:"Banker",player1:"Player 1",player2:"Player 2",player3:"Player 3"};
 const SEAT_ORDER=["banker","player1","player2","player3"];
-const POLL_MS=10000, ARRANGE_SECS=90;
+const POLL_MS=10000;
 
 // ----------------------------------------------------------
 // STATE
 // ----------------------------------------------------------
 let state=null,me=null,dragId=null,selCardId=null;
-let roomCh=null,pollTmr=null,tickTmr=null,autoSubbing=false;
+let roomCh=null,pollTmr=null;
 let sdActivePlayer=null; // which player tab is open in showdown
 
 const el=id=>document.getElementById(id);
@@ -600,21 +600,24 @@ function updateHeaderBtns(){
 // ----------------------------------------------------------
 // REFRESH
 // ----------------------------------------------------------
-async function refresh(){
+async function refresh(background=false){
   if(!me)return;
+  const savedHand = background && state?.status==='arranging' && !state?.my_submitted
+    ? state.my_hand  // preserve local arrangement
+    : null;
   state=await rpc('get_pusoy_my_state',{p_room_code:me.roomCode,p_player_token:me.token});
+  if(savedHand) state.my_hand=savedHand;
   routeToCurrentState();
 }
 
 function startPolling(){
   stopPolling();
-  pollTmr=setInterval(async()=>{if(!me)return;try{await refresh();}catch(e){console.warn(e);}},POLL_MS);
-  tickTmr=setInterval(()=>tickAutoSubmit(),1000);
+  pollTmr=setInterval(async()=>{if(!me)return;try{await refresh(true);}catch(e){console.warn(e);}},POLL_MS);
 }
 
 function stopPolling(){
-  clearInterval(pollTmr);clearInterval(tickTmr);
-  pollTmr=null;tickTmr=null;autoSubbing=false;
+  clearInterval(pollTmr);
+  pollTmr=null;
 }
 
 function subscribeRealtime(){
@@ -1243,28 +1246,6 @@ function renderShowdown(){
 
 // ----------------------------------------------------------
 // AUTO SUBMIT ON TIMEOUT
-// ----------------------------------------------------------
-function getSecsLeft(){
-  if(!state||state.status!=='arranging')return null;
-  const t=state.arrangement_started_at||state.updated_at;
-  if(!t)return null;
-  return Math.max(0,Math.ceil((new Date(t).getTime()+ARRANGE_SECS*1000-Date.now())/1000));
-}
-
-async function tickAutoSubmit(){
-  if(!state||!me||state.status!=='arranging'||state.my_submitted||autoSubbing)return;
-  const s=getSecsLeft();if(s===null||s>0)return;
-  autoSubbing=true;
-  try{
-    let hand=getHand();
-    if(!validateHand(hand).ok)hand=autoArrange([...hand.pool,...hand.top,...hand.middle,...hand.bottom]);
-    setHand(hand);
-    await rpc('submit_pusoy_hand',{p_room_code:me.roomCode,p_player_token:me.token,p_top:hand.top,p_middle:hand.middle,p_bottom:hand.bottom});
-    await refresh();
-    toast('Time up — hand auto-submitted','warn');
-  }catch(e){console.warn(e);}finally{autoSubbing=false;}
-}
-
 // ----------------------------------------------------------
 // SESSION
 // ----------------------------------------------------------
