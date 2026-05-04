@@ -684,6 +684,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+const el=id=>document.getElementById(id);
 // ----------------------------------------------------------
 // THEME
 // ----------------------------------------------------------
@@ -767,9 +768,7 @@ const POLL_MS=10000;
 // ----------------------------------------------------------
 let state=null,me=null,dragId=null,selCardId=null;
 let roomCh=null,pollTmr=null;
-let sdActivePlayer=null; // which player tab is open in showdown
-
-const el=id=>document.getElementById(id);
+let sdActivePlayer=null;
 
 // ----------------------------------------------------------
 // SUPABASE RPC
