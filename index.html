@@ -33,30 +33,64 @@
     button,input,select{font:inherit;}
 
     /* ── HEADER ── */
-    header{position:sticky;top:0;z-index:200;background:var(--bg);border-bottom:1px solid var(--border);padding:0 16px;height:52px;display:flex;align-items:center;gap:12px;transition:background .25s,border-color .25s;}
-    /* transparent header when on felt */
-    body.on-felt header{background:rgba(0,0,0,0.35);border-bottom-color:rgba(255,255,255,0.1);}
-    body.on-felt header .chip{background:rgba(0,0,0,0.3);border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);}
-    body.on-felt header .chip strong{color:#fff;}
-    body.on-felt header .chip.live{background:rgba(0,0,0,0.3);border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);}
-    body.on-felt header .btn{background:rgba(0,0,0,0.25);border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);}
-    body.on-felt header .btn:hover{background:rgba(0,0,0,0.4);color:#fff;}
-    body.on-felt header .btn-win{background:rgba(74,222,128,0.15);border-color:rgba(74,222,128,0.4);color:#4ade80;}
-    body.on-felt header .btn-bad{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.4);color:#f87171;}
-    body.on-felt header .theme-btn{background:rgba(0,0,0,0.25);border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);}
-    .brand{display:flex;align-items:center;gap:7px;flex-shrink:0;}
-    .brand-mark{display:inline-flex;align-items:center;gap:6px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;letter-spacing:.06em;text-transform:uppercase;line-height:1;}
-    .brand-spade{color:var(--text);font-size:20px;line-height:1;flex-shrink:0;}
-    .brand-pusoy{color:var(--text);}
-    .brand-way{color:var(--accent);}
-    .hdr-chips{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
-    .hdr-right{margin-left:auto;display:flex;gap:6px;align-items:center;}
-    .chip{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:3px;border:1px solid var(--border);background:var(--surface);color:var(--muted);white-space:nowrap;}
-    .chip strong{color:var(--text);}
-    .chip.live{border-color:var(--gold-br);background:var(--gold-bg);color:var(--gold);}
-    .chip.live strong{color:var(--gold);letter-spacing:.14em;}
+    /* ── FLOATING UI ── */
+    .float-tl,.float-tr,.float-bl,.float-br{
+      position:fixed;z-index:300;display:flex;gap:8px;align-items:center;
+    }
+    .float-tr{top:16px;right:16px;flex-direction:row;}
+    .float-bl{bottom:20px;left:16px;flex-direction:row;}
 
-    /* ── BUTTONS ── */
+    .float-btn{
+      display:flex;align-items:center;justify-content:center;
+      width:40px;height:40px;border-radius:10px;
+      border:1px solid rgba(255,255,255,0.18);
+      background:rgba(0,0,0,0.32);
+      color:rgba(255,255,255,0.85);
+      cursor:pointer;font-size:16px;
+      backdrop-filter:blur(8px);
+      transition:background .15s,border-color .15s,transform .1s;
+      flex-shrink:0;
+    }
+    .float-btn:hover{background:rgba(0,0,0,0.5);border-color:rgba(255,255,255,0.35);transform:scale(1.06);}
+    .float-btn.f-red{border-color:rgba(239,68,68,0.4);color:#f87171;}
+    .float-btn.f-red:hover{background:rgba(239,68,68,0.2);}
+    .float-btn.f-green{border-color:rgba(74,222,128,0.4);color:#4ade80;}
+    .float-btn.f-green:hover{background:rgba(74,222,128,0.15);}
+    /* on light bg screens, darken float buttons */
+    body:not(.on-felt) .float-btn{
+      background:rgba(0,0,0,0.07);
+      border-color:rgba(0,0,0,0.12);
+      color:var(--text);
+    }
+    body:not(.on-felt) .float-btn:hover{background:rgba(0,0,0,0.14);}
+    body:not(.on-felt) .float-btn.f-red{color:var(--bad);}
+    body:not(.on-felt) .float-btn.f-green{color:var(--win);}
+
+    .float-label{
+      font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;
+      letter-spacing:.1em;text-transform:uppercase;
+      padding:4px 8px;border-radius:6px;
+      border:1px solid rgba(255,255,255,0.15);
+      background:rgba(0,0,0,0.28);
+      color:rgba(255,255,255,0.75);
+      backdrop-filter:blur(8px);
+      white-space:nowrap;
+    }
+    body:not(.on-felt) .float-label{
+      background:rgba(0,0,0,0.06);border-color:rgba(0,0,0,0.1);color:var(--muted);
+    }
+
+    /* room code on lobby felt */
+    .felt-room-code{
+      position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+      font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;
+      letter-spacing:.2em;text-transform:uppercase;
+      color:rgba(255,255,255,0.22);pointer-events:none;z-index:0;white-space:nowrap;
+    }
+
+    /* ── SCREENS ── */
+    .screen{display:none;}
+    .screen.active{display:block;}
     .btn{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:6px 13px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;transition:all .15s;white-space:nowrap;}
     .btn:hover{border-color:var(--muted);}
     .btn:disabled{opacity:.3;cursor:not-allowed;}
@@ -367,23 +401,15 @@
     /* ── FELT SCREEN (home + lobby) ── */
     .felt-screen{
       position:fixed;inset:0;
-      top:52px; /* below header */
-      background:#1a6b3c;
-      background-image:
-        radial-gradient(ellipse at center, #1f7a45 0%, #155530 60%, #0e3d22 100%);
+      background:var(--bg);
       display:flex;flex-direction:column;
       align-items:center;justify-content:center;
       overflow:hidden;
+      padding:clamp(16px,4vh,32px) 16px clamp(12px,2vh,20px);
     }
-    /* subtle felt texture via repeating dots */
-    .felt-screen::before{
-      content:'';position:absolute;inset:0;
-      background-image:radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
-      background-size:18px 18px;
-      pointer-events:none;
-    }
+    #homeScreen .felt-screen{justify-content:flex-start;padding-top:clamp(24px,5vh,44px);}
 
-    /* center logo stamped on felt */
+    /* center logo stamped on lobby table felt */
     .felt-logo{
       position:absolute;
       top:58%;left:50%;
@@ -394,86 +420,96 @@
     }
     .felt-logo-spade{
       font-size:clamp(22px,4vw,36px);
-      color:rgba(255,255,255,0.12);
+      color:rgba(255,255,255,0.14);
       line-height:1;
     }
     .felt-logo-title{
       font-family:'Barlow Condensed',sans-serif;
-      font-size:clamp(18px,4vw,32px);
-      font-weight:900;letter-spacing:.2em;
+      font-size:clamp(16px,3.5vw,28px);
+      font-weight:900;letter-spacing:.22em;
       text-transform:uppercase;
-      color:rgba(255,255,255,0.12);
+      color:rgba(255,255,255,0.14);
       line-height:1;margin-top:4px;
     }
-    .felt-logo-sub{
+
+    /* home screen brand — normal text on normal bg */
+    .felt-header{
+      text-align:center;
+      margin-bottom:clamp(12px,3vh,24px);
+      position:relative;z-index:1;
+    }
+    .felt-brand{
       font-family:'Barlow Condensed',sans-serif;
-      font-size:clamp(10px,2vw,13px);
-      letter-spacing:.12em;text-transform:uppercase;
-      color:rgba(255,255,255,0.18);
-      margin-top:8px;
+      font-weight:900;
+      font-size:clamp(28px,7vw,52px);
+      letter-spacing:.1em;
+      text-transform:uppercase;
+      color:var(--text);
+      line-height:1;
+    }
+    .felt-brand span{color:var(--accent);}
+    .felt-tagline{
+      font-family:'Barlow Condensed',sans-serif;
+      font-size:clamp(11px,2.5vw,13px);
+      letter-spacing:.1em;
+      text-transform:uppercase;
+      color:var(--muted);
+      margin-top:6px;
+      font-style:italic;
     }
 
-    /* player picker circular grid on felt */
     #homeScreen .player-grid{
       position:relative;z-index:1;
       width:min(86vw,420px);
       aspect-ratio:1;
       margin:0 auto;
     }
-    /* player buttons on felt — white names */
-    #homeScreen .avatar-name{color:rgba(255,255,255,0.8);}
-    #homeScreen .player-btn.selected .avatar-name{color:#fff;}
-    #homeScreen .player-btn.selected .avatar-ring{border-color:#fff;box-shadow:0 0 0 4px rgba(255,255,255,0.25);}
-    #homeScreen .player-btn:hover .avatar-ring{border-color:rgba(255,255,255,0.7);}
-    #homeScreen .avatar-ring{border-color:rgba(255,255,255,0.3);}
+    /* player buttons on normal bg */
+    #homeScreen .avatar-name{color:var(--muted);}
+    #homeScreen .player-btn.selected .avatar-name{color:var(--accent);}
+    #homeScreen .player-btn.selected .avatar-ring{border-color:var(--accent);box-shadow:0 0 0 4px rgba(204,0,0,0.12);}
+    #homeScreen .player-btn:hover .avatar-ring{border-color:var(--muted);}
 
     .felt-actions{
       position:relative;z-index:1;
       margin-top:16px;
       display:flex;gap:8px;justify-content:center;
     }
-    /* white-ish buttons on green felt */
-    .felt-actions .btn-primary{
-      background:rgba(255,255,255,0.92);
-      color:#0e3d22;
-      border-color:transparent;
-      font-size:15px;padding:12px 28px;
-    }
-    .felt-actions .btn-primary:hover{background:#fff;}
 
-    /* lobby table on felt */
-    #lobbyScreen .lobby-table{
+    /* ── GREEN FELT — only the lobby table ── */
+    .lobby-table{
+      background: #1a6b3c;
+      background-image: radial-gradient(ellipse at 50% 40%, #22854a 0%, #155530 55%, #0e3d22 100%);
+      border-color: #0a3019;
       position:relative;z-index:1;
-      border-color:rgba(255,255,255,0.15);
-      background:rgba(0,0,0,0.12);
       width:min(90vw,520px);
     }
-    #lobbyScreen .lobby-table::before{border-color:rgba(255,255,255,0.08);}
-    #lobbyScreen .lobby-av{
+    /* dot texture on felt */
+    .lobby-table::after{
+      content:'';position:absolute;inset:0;border-radius:26px;
+      background-image:radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size:16px 16px;pointer-events:none;
+    }
+    .lobby-table::before{border-color:rgba(255,255,255,0.1);}
+    .lobby-av{
       border-color:rgba(255,255,255,0.3);
-      background:rgba(255,255,255,0.08);
+      background:rgba(0,0,0,0.2);
     }
-    #lobbyScreen .lobby-seat.is-me .lobby-av{border-color:rgba(255,255,255,0.9);box-shadow:0 0 0 4px rgba(255,255,255,0.2);}
-    #lobbyScreen .lobby-seat.is-ready .lobby-av{border-color:#4ade80;box-shadow:0 0 0 4px rgba(74,222,128,0.2);}
-    #lobbyScreen .lobby-seat.is-empty .lobby-av{opacity:.3;}
-    #lobbyScreen .lobby-av-fb{color:rgba(255,255,255,0.3);}
-    #lobbyScreen .lobby-seat-name{color:rgba(255,255,255,0.9);}
-    #lobbyScreen .lobby-seat.is-empty .lobby-seat-name{color:rgba(255,255,255,0.3);}
-    #lobbyScreen .lobby-seat-role{color:rgba(255,255,255,0.5);}
-    #lobbyScreen .lobby-dot{border-color:#1a6b3c;background:rgba(255,255,255,0.3);}
-    #lobbyScreen .lobby-dot.d-ready{background:#4ade80;}
-    #lobbyScreen .lobby-status{color:rgba(255,255,255,0.6);margin-top:12px;}
-    #lobbyScreen .lobby-status strong{color:#fff;}
-    #lobbyScreen .lobby-actions{margin-top:10px;}
-    #lobbyScreen .lobby-actions .btn-primary{
-      background:rgba(255,255,255,0.92);color:#0e3d22;border-color:transparent;
-    }
-    #lobbyScreen .lobby-actions .btn-primary:hover{background:#fff;}
-    #lobbyScreen .lobby-actions .btn-win{
-      background:rgba(74,222,128,0.15);border-color:rgba(74,222,128,0.4);color:#4ade80;
-    }
+    .lobby-seat.is-me .lobby-av{border-color:rgba(255,255,255,0.95);box-shadow:0 0 0 4px rgba(255,255,255,0.2);}
+    .lobby-seat.is-ready .lobby-av{border-color:#4ade80;box-shadow:0 0 0 4px rgba(74,222,128,0.2);}
+    .lobby-seat.is-empty .lobby-av{opacity:.3;}
+    .lobby-av-fb{color:rgba(255,255,255,0.3);}
+    .lobby-seat-name{color:rgba(255,255,255,0.92);}
+    .lobby-seat.is-empty .lobby-seat-name{color:rgba(255,255,255,0.28);}
+    .lobby-seat-role{color:rgba(255,255,255,0.5);}
+    .lobby-dot{border-color:#155530;background:rgba(255,255,255,0.3);}
+    .lobby-dot.d-ready{background:#4ade80;}
 
-    /* theme toggle */
+    .lobby-status{text-align:center;font-size:13px;color:var(--muted);margin-top:12px;}
+    .lobby-status strong{color:var(--text);}
+    .lobby-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px;}
+
+    /* theme toggle (old class, now unused but kept for safety) */
     .theme-btn{display:flex;align-items:center;gap:4px;padding:4px 9px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .15s;}
     .theme-btn:hover{border-color:var(--muted);color:var(--text);}
 
@@ -494,37 +530,30 @@
 </head>
 <body>
 
-<!-- HEADER -->
-<header>
-  <div id="hdrChips" class="hdr-chips hdr-room">
-    <span class="chip live">Room&nbsp;<strong id="hdrCode"></strong></span>
-    <span class="chip">You:&nbsp;<strong id="hdrMe"></strong></span>
-    <span class="chip" id="hdrStatusChip">Lobby</span>
-  </div>
-  <div class="hdr-right">
-    <div id="hdrBtns" class="hdr-room" style="gap:6px;display:none;align-items:center;flex-wrap:wrap;">
-      <button class="btn btn-win" id="btnNewDeal" style="display:none">New Deal</button>
-      <button class="btn btn-ghost" id="btnResetLobby" style="display:none">Reset Lobby</button>
-      <button class="btn btn-bad" id="btnResetDb" style="display:none">Reset DB</button>
-      <button class="btn btn-ghost" id="btnCopyCode">Copy Code</button>
-      <button class="btn btn-ghost" id="btnLeave">Leave</button>
-    </div>
-    <button class="theme-btn" id="themeBtn"><span id="themeIco">☀️</span><span id="themeLbl">Light</span></button>
-  </div>
-</header>
+<!-- FLOATING UI — always on top -->
+<div class="float-tr" id="floatTR">
+  <!-- Fred banker controls (shown when in room) -->
+  <button class="float-btn f-green" id="btnNewDeal" style="display:none" title="New Deal">⚡</button>
+  <button class="float-btn" id="btnResetLobby" style="display:none" title="Reset Lobby">↺</button>
+  <button class="float-btn f-red" id="btnResetDb" style="display:none" title="Reset DB">⚠</button>
+  <!-- always visible -->
+  <button class="float-btn" id="btnCopyCode" style="display:none" title="Copy Room Code">⧉</button>
+  <button class="float-btn" id="btnLeave" style="display:none" title="Leave">✕</button>
+  <button class="float-btn" id="btnFullscreen" title="Fullscreen">⛶</button>
+  <button class="float-btn" id="themeBtn" title="Toggle theme"><span id="themeIco">☀</span></button>
+</div>
 
 <!-- ══ HOME ══ -->
 <section id="homeScreen" class="screen active">
   <div class="felt-screen">
-    <!-- felt center logo -->
-    <div class="felt-logo">
-      <div class="felt-logo-spade">♠</div>
-      <div class="felt-logo-title">PUSOY WAY</div>
-      <div class="felt-logo-sub">Make the best way for the cards you are dealt.</div>
+    <!-- top header brand on felt -->
+    <div class="felt-header">
+      <div class="felt-brand">♠ <span>PUSOY</span> WAY</div>
+      <div class="felt-tagline">Make the best way for the cards you are dealt.</div>
     </div>
     <!-- circular player picker -->
     <div class="player-grid" id="playerPickerGrid"></div>
-    <!-- action panels (shown after selection) -->
+    <!-- action panels -->
     <div id="homeActionsFred" style="display:none;" class="felt-actions">
       <button class="btn btn-primary btn-lg" id="btnCreate">Create Room as Banker</button>
     </div>
@@ -659,11 +688,16 @@ document.addEventListener('DOMContentLoaded', function() {
 // THEME
 // ----------------------------------------------------------
 let isDark=false;
-document.body.classList.add('on-felt'); // home screen is default
 const themeBtn=document.getElementById('themeBtn');
-function applyTheme(d){document.documentElement.setAttribute('data-theme',d?'dark':'light');document.getElementById('themeIco').textContent=d?'☀️':'🌙';document.getElementById('themeLbl').textContent=d?'Light':'Dark';}
+function applyTheme(d){document.documentElement.setAttribute('data-theme',d?'dark':'light');document.getElementById('themeIco').textContent=d?'🌙':'☀';}
 applyTheme(isDark);
 themeBtn.addEventListener('click',()=>{isDark=!isDark;applyTheme(isDark);});
+
+// Fullscreen
+el('btnFullscreen').addEventListener('click',()=>{
+  if(!document.fullscreenElement){document.documentElement.requestFullscreen?.();}
+  else{document.exitFullscreen?.();}
+});
 
 // ----------------------------------------------------------
 // TOAST
@@ -752,7 +786,6 @@ async function rpc(fn,args){
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   el(id).classList.add('active');
-  document.body.classList.toggle('on-felt', id==='homeScreen'||id==='lobbyScreen');
 }
 
 function routeToCurrentState(){
@@ -775,18 +808,16 @@ function routeToCurrentState(){
 
 function updateHeaderChips(){
   if(!me)return;
-  el('hdrChips').classList.add('active');
-  el('hdrCode').textContent=me.roomCode;
-  el('hdrMe').textContent=me.name||'';
-  el('hdrStatusChip').textContent=state?.status||'';
-  el('hdrBtns').style.display='flex';
+  // show leave + copy in floating UI when in room
+  el('btnLeave').style.display='';
+  el('btnCopyCode').style.display='';
 }
 
 function updateHeaderBtns(){
   const isFred=me?.playerId==='fred';
   const st=state?.status;
   el('btnNewDeal').style.display=(isFred&&['lobby','waiting','showdown'].includes(st))?'':'none';
-  el('btnNewDeal').textContent=st==='lobby'?'Start Deal':'New Deal';
+  el('btnNewDeal').title=st==='lobby'?'Start Deal':'New Deal';
   el('btnResetLobby').style.display=(isFred&&st!=='lobby')?'':'none';
   el('btnResetDb').style.display=isFred?'':'none';
 }
@@ -965,8 +996,11 @@ async function leaveRoom(){
   if(roomCh){await sb.removeChannel(roomCh);roomCh=null;}
   stopPolling();localStorage.removeItem('pusoy_sess');
   state=null;me=null;selCardId=null;selectedPlayer=null;fredUnlocked=false;
-  el('hdrChips').classList.remove('active');
-  el('hdrBtns').style.display='none';
+  el('btnLeave').style.display='none';
+  el('btnCopyCode').style.display='none';
+  el('btnNewDeal').style.display='none';
+  el('btnResetLobby').style.display='none';
+  el('btnResetDb').style.display='none';
   el('homeActionsFred').style.display='none';
   el('homeActionsPlayer').style.display='none';
   renderPlayerPicker();
