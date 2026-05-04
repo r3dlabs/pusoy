@@ -106,29 +106,105 @@
     .seat-row{display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);transition:border-color .15s;}
 
     /* ══════════════════════════════════════════
-       LOBBY SCREEN (room overview)
+       LOBBY SCREEN — casino table layout
     ══════════════════════════════════════════ */
-    .lobby-wrap{max-width:900px;margin:0 auto;padding:20px 16px;}
-    .lobby-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+    .lobby-wrap{max-width:540px;margin:0 auto;padding:20px 16px 28px;}
+    .lobby-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px;margin-bottom:20px;}
     .lobby-title::after{content:'';flex:1;height:1px;background:var(--border);}
 
-    /* seat table */
-    .seat-table{display:grid;gap:8px;}
-    .seat-row.me{border-color:var(--gold-br);background:var(--gold-bg);}
-    .seat-row.submitted{border-color:var(--win-br);}
-    .seat-icon{font-size:18px;text-align:center;}
-    .seat-info{}
-    .seat-name-big{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;line-height:1;}
-    .seat-role-txt{font-size:11px;color:var(--muted);margin-top:1px;}
-    .seat-badge{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:2px 8px;border-radius:2px;border:1px solid var(--border);color:var(--muted);background:var(--surface2);white-space:nowrap;text-align:center;}
-    .seat-badge.b-host{border-color:var(--gold-br);background:var(--gold-bg);color:var(--gold);}
-    .seat-badge.b-you{border-color:var(--gold-br);background:var(--gold-bg);color:var(--gold);}
-    .seat-badge.b-ready{border-color:var(--win-br);background:var(--win-bg);color:var(--win);}
-    .seat-badge.b-live{border-color:rgba(204,0,0,.3);background:var(--accent-bg);color:var(--accent);}
+    /* table felt */
+    .lobby-table{
+      position:relative;
+      width:100%;
+      padding-bottom:80%;   /* aspect ratio — shrinks on mobile */
+      border-radius:28px;
+      background:var(--surface2);
+      border:2px solid var(--border);
+      margin-bottom:16px;
+    }
 
-    .lobby-status{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;font-size:13px;color:var(--muted);margin-top:10px;line-height:1.5;}
+    /* felt inner */
+    .lobby-table::before{
+      content:'';
+      position:absolute;
+      inset:10px;
+      border-radius:20px;
+      border:1px solid var(--border);
+      pointer-events:none;
+    }
+
+    /* each seat is absolutely placed */
+    .lobby-seat{
+      position:absolute;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:5px;
+      transform:translate(-50%,-50%);
+    }
+
+    /* avatar circle */
+    .lobby-av{
+      border-radius:18px;    /* rounded square */
+      overflow:hidden;
+      border:3px solid var(--border);
+      background:var(--surface);
+      flex-shrink:0;
+      transition:border-color .2s,box-shadow .2s;
+    }
+    .lobby-av img{width:100%;height:100%;object-fit:cover;display:block;}
+    .lobby-av-fb{
+      width:100%;height:100%;
+      display:flex;align-items:center;justify-content:center;
+      font-family:'Barlow Condensed',sans-serif;font-weight:900;
+      color:var(--border);
+    }
+
+    /* size variants */
+    .lobby-seat.sz-banker .lobby-av{width:clamp(72px,16vw,100px);height:clamp(72px,16vw,100px);}
+    .lobby-seat.sz-banker .lobby-av-fb{font-size:clamp(24px,5vw,34px);}
+    .lobby-seat.sz-player .lobby-av{width:clamp(60px,13vw,84px);height:clamp(60px,13vw,84px);}
+    .lobby-seat.sz-player .lobby-av-fb{font-size:clamp(20px,4vw,28px);}
+
+    /* states */
+    .lobby-seat.is-empty .lobby-av{opacity:.35;border-style:dashed;}
+    .lobby-seat.is-me .lobby-av{border-color:var(--accent);box-shadow:0 0 0 4px rgba(204,0,0,0.12);}
+    .lobby-seat.is-ready .lobby-av{border-color:var(--win);box-shadow:0 0 0 4px rgba(62,207,122,0.14);}
+
+    /* status dot */
+    .lobby-av-wrap{position:relative;display:inline-block;}
+    .lobby-dot{position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;border-radius:50%;border:2px solid var(--surface2);background:var(--muted);}
+    .lobby-dot.d-ready{background:var(--win);}
+
+    /* name label */
+    .lobby-seat-name{
+      font-family:'Barlow Condensed',sans-serif;
+      font-size:clamp(11px,2.5vw,14px);
+      font-weight:900;letter-spacing:.06em;text-transform:uppercase;
+      color:var(--text);line-height:1;text-align:center;
+      white-space:nowrap;
+    }
+    .lobby-seat.is-empty .lobby-seat-name{color:var(--muted);}
+    .lobby-seat-role{
+      font-family:'Barlow Condensed',sans-serif;
+      font-size:clamp(9px,2vw,11px);
+      letter-spacing:.1em;text-transform:uppercase;
+      color:var(--muted);text-align:center;
+    }
+
+    /* seat positions as % of table container */
+    /* banker: top center */
+    .lobby-seat.pos-banker{top:18%;left:50%;}
+    /* player 2: mid left */
+    .lobby-seat.pos-p2{top:55%;left:14%;}
+    /* player 1: bottom center */
+    .lobby-seat.pos-p1{top:85%;left:50%;}
+    /* player 3: mid right */
+    .lobby-seat.pos-p3{top:55%;left:86%;}
+
+    .lobby-status{text-align:center;font-size:13px;color:var(--muted);margin-bottom:12px;}
     .lobby-status strong{color:var(--text);}
-    .lobby-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+    .lobby-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
 
     /* ══════════════════════════════════════════
        ARRANGE SCREEN — Player's personal view
@@ -348,8 +424,8 @@
 <!-- ══ LOBBY ══ -->
 <section id="lobbyScreen" class="screen">
   <div class="lobby-wrap">
-    <div class="lobby-title">Room</div>
-    <div class="seat-table" id="seatTable"></div>
+    <div class="lobby-title">Room 0067</div>
+    <div class="lobby-table" id="lobbyTable"></div>
     <div class="lobby-status" id="lobbyStatus"></div>
     <div class="lobby-actions" id="lobbyActions"></div>
   </div>
@@ -821,32 +897,53 @@ function playerIdFromName(name){
 }
 
 function renderLobby(){
-  const tbl=el('seatTable');tbl.innerHTML='';
-  SEAT_ORDER.forEach(seat=>{
+  const table=el('lobbyTable');
+  table.innerHTML='';
+
+  const seatCfg=[
+    {seat:'banker', posCls:'pos-banker', szCls:'sz-banker', role:'Banker'},
+    {seat:'player2',posCls:'pos-p2',     szCls:'sz-player', role:'Player 2'},
+    {seat:'player1',posCls:'pos-p1',     szCls:'sz-player', role:'Player 1'},
+    {seat:'player3',posCls:'pos-p3',     szCls:'sz-player', role:'Player 3'},
+  ];
+
+  seatCfg.forEach(({seat,posCls,szCls,role})=>{
     const p=state.players?.[seat];
     const isMe=me.seat===seat;
-    const row=document.createElement('div');
-    row.className='seat-row'+(isMe?' me':'')+(p?.submitted?' submitted':'');
     const pid=p?playerIdFromName(p.name):'';
-    const avHtml=p
-      ?`<div class="avatar-sm"><img src="${avatarUrl(pid)}" alt="${p.name}" onerror="this.parentNode.innerHTML='<div class=\\'avatar-sm-fb\\'>${p.name[0]}</div>'"/></div>`
-      :`<div class="avatar-sm"><div class="avatar-sm-fb">?</div></div>`;
-    let badgeTxt='Empty',badgeCls='';
-    if(seat==='banker'&&p){badgeTxt='Host';badgeCls='b-host';}
-    if(p?.submitted){badgeTxt='Ready ✓';badgeCls='b-ready';}
-    if(isMe&&!p?.submitted){badgeTxt='You';badgeCls='b-you';}
-    row.innerHTML=`${avHtml}
-      <div class="seat-info">
-        <div class="seat-name-big">${p?p.name:SEAT_NAMES[seat]}</div>
-        <div class="seat-role-txt">${SEAT_NAMES[seat]}${!p?' — Empty':''}</div>
+    const isEmpty=!p;
+    const isReady=!!p?.submitted;
+
+    let cls=`lobby-seat ${posCls} ${szCls}`;
+    if(isMe)cls+=' is-me';
+    else if(isReady)cls+=' is-ready';
+    if(isEmpty)cls+=' is-empty';
+
+    const imgHtml=p
+      ?`<img src="${avatarUrl(pid)}" alt="${p.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+         <div class="lobby-av-fb" style="display:none">${p.name[0]}</div>`
+      :`<div class="lobby-av-fb">?</div>`;
+
+    const dot=isReady
+      ?`<span class="lobby-dot d-ready"></span>`
+      :(p?`<span class="lobby-dot"></span>`:'');
+
+    const div=document.createElement('div');
+    div.className=cls;
+    div.innerHTML=`
+      <div class="lobby-av-wrap">
+        <div class="lobby-av">${imgHtml}</div>
+        ${dot}
       </div>
-      <div class="seat-badge ${badgeCls}">${badgeTxt}</div>`;
-    tbl.appendChild(row);
+      <div class="lobby-seat-name">${p?p.name:(seat==='banker'?'Banker':role)}</div>
+      <div class="lobby-seat-role">${role}${isMe?' · You':''}${isReady?' · Ready':''}</div>
+    `;
+    table.appendChild(div);
   });
 
   const joined=joinedSeats();
   const sub=joined.filter(s=>state.players?.[s]?.submitted);
-  el('lobbyStatus').innerHTML=`<strong>${joined.length}/4</strong> seats filled · <strong>${sub.length}/${joined.length}</strong> submitted`;
+  el('lobbyStatus').innerHTML=`<strong>${joined.length}/4</strong> joined · <strong>${sub.length}/${joined.length}</strong> submitted`;
 
   const acts=el('lobbyActions');acts.innerHTML='';
   if(me?.playerId==='fred'){
