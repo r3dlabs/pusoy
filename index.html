@@ -839,11 +839,23 @@ function updateHeaderBtns(){
 // ----------------------------------------------------------
 async function refresh(background=false){
   if(!me)return;
-  const savedHand = background && state?.status==='arranging' && !state?.my_submitted
-    ? state.my_hand  // preserve local arrangement
-    : null;
-  state=await rpc('get_pusoy_my_state',{p_room_code:me.roomCode,p_player_token:me.token});
-  if(savedHand) state.my_hand=savedHand;
+  const savedHand=background&&state?.status==='arranging'&&!state?.my_submitted?state.my_hand:null;
+  // Call supabase directly so we can silently handle session-invalidated errors
+  const{data,error}=await sb.rpc('get_pusoy_my_state',{p_room_code:me.roomCode,p_player_token:me.token});
+  if(error){
+    // Token/room no longer valid — DB was reset, quietly send player home
+    if(error.message?.includes('Invalid token')||error.message?.includes('not found')){
+      await leaveRoom();
+      toast('Room was reset. Please rejoin.','warn');
+      return;
+    }
+    // Any other error — show it
+    console.error(error);
+    await showAlert(error.message||'Connection error',{title:'Error',type:'error'});
+    return;
+  }
+  state=data;
+  if(savedHand)state.my_hand=savedHand;
   routeToCurrentState();
 }
 
