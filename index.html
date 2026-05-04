@@ -33,7 +33,17 @@
     button,input,select{font:inherit;}
 
     /* ── HEADER ── */
-    header{position:sticky;top:0;z-index:200;background:var(--bg);border-bottom:1px solid var(--border);padding:0 16px;height:52px;display:flex;align-items:center;gap:12px;}
+    header{position:sticky;top:0;z-index:200;background:var(--bg);border-bottom:1px solid var(--border);padding:0 16px;height:52px;display:flex;align-items:center;gap:12px;transition:background .25s,border-color .25s;}
+    /* transparent header when on felt */
+    body.on-felt header{background:rgba(0,0,0,0.35);border-bottom-color:rgba(255,255,255,0.1);}
+    body.on-felt header .chip{background:rgba(0,0,0,0.3);border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);}
+    body.on-felt header .chip strong{color:#fff;}
+    body.on-felt header .chip.live{background:rgba(0,0,0,0.3);border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);}
+    body.on-felt header .btn{background:rgba(0,0,0,0.25);border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);}
+    body.on-felt header .btn:hover{background:rgba(0,0,0,0.4);color:#fff;}
+    body.on-felt header .btn-win{background:rgba(74,222,128,0.15);border-color:rgba(74,222,128,0.4);color:#4ade80;}
+    body.on-felt header .btn-bad{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.4);color:#f87171;}
+    body.on-felt header .theme-btn{background:rgba(0,0,0,0.25);border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);}
     .brand{display:flex;align-items:center;gap:7px;flex-shrink:0;}
     .brand-mark{display:inline-flex;align-items:center;gap:6px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;letter-spacing:.06em;text-transform:uppercase;line-height:1;}
     .brand-spade{color:var(--text);font-size:20px;line-height:1;flex-shrink:0;}
@@ -90,9 +100,9 @@
 
     /* ── PLAYER PICKER ── */
     .pick-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
-    .player-grid{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;padding:4px 0 8px;}
-    .player-btn{display:flex;flex-direction:column;align-items:center;gap:7px;background:none;border:none;cursor:pointer;padding:4px;border-radius:var(--r);transition:transform .12s;}
-    .player-btn:hover{transform:translateY(-3px);}
+    .player-grid{position:relative;width:100%;max-width:340px;aspect-ratio:1;margin:0 auto 8px;}
+    .player-btn{position:absolute;display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:4px;border-radius:var(--r);transition:transform .12s;transform:translate(-50%,-50%);}
+    .player-btn:hover{transform:translate(-50%,-50%) scale(1.08);}
     .player-btn:hover .avatar-ring{border-color:var(--accent);}
     .player-btn.selected .avatar-ring{border-color:var(--accent);box-shadow:0 0 0 4px rgba(204,0,0,0.15);}
     .player-btn.selected .avatar-name{color:var(--accent);}
@@ -354,6 +364,115 @@
     .luck-multiplier{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#c084fc;letter-spacing:.04em;}
     .luck-multiplier span{font-size:13px;color:#a78bfa;font-weight:600;}
 
+    /* ── FELT SCREEN (home + lobby) ── */
+    .felt-screen{
+      position:fixed;inset:0;
+      top:52px; /* below header */
+      background:#1a6b3c;
+      background-image:
+        radial-gradient(ellipse at center, #1f7a45 0%, #155530 60%, #0e3d22 100%);
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      overflow:hidden;
+    }
+    /* subtle felt texture via repeating dots */
+    .felt-screen::before{
+      content:'';position:absolute;inset:0;
+      background-image:radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size:18px 18px;
+      pointer-events:none;
+    }
+
+    /* center logo stamped on felt */
+    .felt-logo{
+      position:absolute;
+      top:58%;left:50%;
+      transform:translate(-50%,-50%);
+      text-align:center;
+      pointer-events:none;
+      z-index:0;
+    }
+    .felt-logo-spade{
+      font-size:clamp(22px,4vw,36px);
+      color:rgba(255,255,255,0.12);
+      line-height:1;
+    }
+    .felt-logo-title{
+      font-family:'Barlow Condensed',sans-serif;
+      font-size:clamp(18px,4vw,32px);
+      font-weight:900;letter-spacing:.2em;
+      text-transform:uppercase;
+      color:rgba(255,255,255,0.12);
+      line-height:1;margin-top:4px;
+    }
+    .felt-logo-sub{
+      font-family:'Barlow Condensed',sans-serif;
+      font-size:clamp(10px,2vw,13px);
+      letter-spacing:.12em;text-transform:uppercase;
+      color:rgba(255,255,255,0.18);
+      margin-top:8px;
+    }
+
+    /* player picker circular grid on felt */
+    #homeScreen .player-grid{
+      position:relative;z-index:1;
+      width:min(86vw,420px);
+      aspect-ratio:1;
+      margin:0 auto;
+    }
+    /* player buttons on felt — white names */
+    #homeScreen .avatar-name{color:rgba(255,255,255,0.8);}
+    #homeScreen .player-btn.selected .avatar-name{color:#fff;}
+    #homeScreen .player-btn.selected .avatar-ring{border-color:#fff;box-shadow:0 0 0 4px rgba(255,255,255,0.25);}
+    #homeScreen .player-btn:hover .avatar-ring{border-color:rgba(255,255,255,0.7);}
+    #homeScreen .avatar-ring{border-color:rgba(255,255,255,0.3);}
+
+    .felt-actions{
+      position:relative;z-index:1;
+      margin-top:16px;
+      display:flex;gap:8px;justify-content:center;
+    }
+    /* white-ish buttons on green felt */
+    .felt-actions .btn-primary{
+      background:rgba(255,255,255,0.92);
+      color:#0e3d22;
+      border-color:transparent;
+      font-size:15px;padding:12px 28px;
+    }
+    .felt-actions .btn-primary:hover{background:#fff;}
+
+    /* lobby table on felt */
+    #lobbyScreen .lobby-table{
+      position:relative;z-index:1;
+      border-color:rgba(255,255,255,0.15);
+      background:rgba(0,0,0,0.12);
+      width:min(90vw,520px);
+    }
+    #lobbyScreen .lobby-table::before{border-color:rgba(255,255,255,0.08);}
+    #lobbyScreen .lobby-av{
+      border-color:rgba(255,255,255,0.3);
+      background:rgba(255,255,255,0.08);
+    }
+    #lobbyScreen .lobby-seat.is-me .lobby-av{border-color:rgba(255,255,255,0.9);box-shadow:0 0 0 4px rgba(255,255,255,0.2);}
+    #lobbyScreen .lobby-seat.is-ready .lobby-av{border-color:#4ade80;box-shadow:0 0 0 4px rgba(74,222,128,0.2);}
+    #lobbyScreen .lobby-seat.is-empty .lobby-av{opacity:.3;}
+    #lobbyScreen .lobby-av-fb{color:rgba(255,255,255,0.3);}
+    #lobbyScreen .lobby-seat-name{color:rgba(255,255,255,0.9);}
+    #lobbyScreen .lobby-seat.is-empty .lobby-seat-name{color:rgba(255,255,255,0.3);}
+    #lobbyScreen .lobby-seat-role{color:rgba(255,255,255,0.5);}
+    #lobbyScreen .lobby-dot{border-color:#1a6b3c;background:rgba(255,255,255,0.3);}
+    #lobbyScreen .lobby-dot.d-ready{background:#4ade80;}
+    #lobbyScreen .lobby-status{color:rgba(255,255,255,0.6);margin-top:12px;}
+    #lobbyScreen .lobby-status strong{color:#fff;}
+    #lobbyScreen .lobby-actions{margin-top:10px;}
+    #lobbyScreen .lobby-actions .btn-primary{
+      background:rgba(255,255,255,0.92);color:#0e3d22;border-color:transparent;
+    }
+    #lobbyScreen .lobby-actions .btn-primary:hover{background:#fff;}
+    #lobbyScreen .lobby-actions .btn-win{
+      background:rgba(74,222,128,0.15);border-color:rgba(74,222,128,0.4);color:#4ade80;
+    }
+
     /* theme toggle */
     .theme-btn{display:flex;align-items:center;gap:4px;padding:4px 9px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .15s;}
     .theme-btn:hover{border-color:var(--muted);color:var(--text);}
@@ -377,9 +496,6 @@
 
 <!-- HEADER -->
 <header>
-  <div class="brand">
-    <span class="brand-mark"><span class="brand-spade">♠</span><span class="brand-pusoy">PUSOY</span><span class="brand-way">WAY</span></span>
-  </div>
   <div id="hdrChips" class="hdr-chips hdr-room">
     <span class="chip live">Room&nbsp;<strong id="hdrCode"></strong></span>
     <span class="chip">You:&nbsp;<strong id="hdrMe"></strong></span>
@@ -399,32 +515,34 @@
 
 <!-- ══ HOME ══ -->
 <section id="homeScreen" class="screen active">
-  <div class="home-wrap">
-    <div class="home-hero">
-      <h1><span class="h1-spade">♠</span><span class="h1-pusoy">PUSOY</span><span class="h1-way">WAY</span></h1>
-      <p>Make the best way for the cards you are dealt.</p>
+  <div class="felt-screen">
+    <!-- felt center logo -->
+    <div class="felt-logo">
+      <div class="felt-logo-spade">♠</div>
+      <div class="felt-logo-title">PUSOY WAY</div>
+      <div class="felt-logo-sub">Make the best way for the cards you are dealt.</div>
     </div>
-    <div class="home-card">
-      <div class="player-grid" id="playerPickerGrid"></div>
-
-      <!-- Fred only: create room as banker -->
-      <div id="homeActionsFred" style="display:none;" class="fstack">
-        <button class="btn btn-primary btn-lg" id="btnCreate">Create Room as Banker</button>
-      </div>
-
-      <!-- Other players: just tap and join -->
-      <div id="homeActionsPlayer" style="display:none;" class="fstack">
-        <button class="btn btn-primary btn-lg" id="btnJoinPlayer">Join Game</button>
-      </div>
-
+    <!-- circular player picker -->
+    <div class="player-grid" id="playerPickerGrid"></div>
+    <!-- action panels (shown after selection) -->
+    <div id="homeActionsFred" style="display:none;" class="felt-actions">
+      <button class="btn btn-primary btn-lg" id="btnCreate">Create Room as Banker</button>
+    </div>
+    <div id="homeActionsPlayer" style="display:none;" class="felt-actions">
+      <button class="btn btn-primary btn-lg" id="btnJoinPlayer">Join Game</button>
     </div>
   </div>
 </section>
 
 <!-- ══ LOBBY ══ -->
 <section id="lobbyScreen" class="screen">
-  <div class="lobby-wrap">
-    <div class="lobby-title">Room 0067</div>
+  <div class="felt-screen">
+    <!-- felt center logo -->
+    <div class="felt-logo">
+      <div class="felt-logo-spade">♠</div>
+      <div class="felt-logo-title">PUSOY WAY</div>
+    </div>
+    <!-- casino table -->
     <div class="lobby-table" id="lobbyTable"></div>
     <div class="lobby-status" id="lobbyStatus"></div>
     <div class="lobby-actions" id="lobbyActions"></div>
@@ -541,6 +659,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // THEME
 // ----------------------------------------------------------
 let isDark=false;
+document.body.classList.add('on-felt'); // home screen is default
 const themeBtn=document.getElementById('themeBtn');
 function applyTheme(d){document.documentElement.setAttribute('data-theme',d?'dark':'light');document.getElementById('themeIco').textContent=d?'☀️':'🌙';document.getElementById('themeLbl').textContent=d?'Light':'Dark';}
 applyTheme(isDark);
@@ -633,6 +752,7 @@ async function rpc(fn,args){
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   el(id).classList.add('active');
+  document.body.classList.toggle('on-felt', id==='homeScreen'||id==='lobbyScreen');
 }
 
 function routeToCurrentState(){
@@ -752,18 +872,21 @@ let fredUnlocked=false;
 function renderPlayerPicker(){
   const grid=el('playerPickerGrid');
   grid.innerHTML='';
-  PLAYERS.forEach(p=>{
+  const total=PLAYERS.length;
+  const r=37; // radius as % of container
+  PLAYERS.forEach((p,i)=>{
+    const angle=(i/total)*2*Math.PI - Math.PI/2; // start from 12 o'clock
+    const x=50+r*Math.cos(angle);
+    const y=50+r*Math.sin(angle);
     const btn=document.createElement('button');
     btn.className='player-btn'+(selectedPlayer?.id===p.id?' selected':'');
+    btn.style.left=x+'%';
+    btn.style.top=y+'%';
     btn.innerHTML=avatarHtml(p.id,p.name,'lg')+`<span class="avatar-name">${p.name}</span>`;
     btn.onclick=()=>{
-      if(p.id==='fred'&&!fredUnlocked){
-        promptFredPassword();
-        return;
-      }
+      if(p.id==='fred'&&!fredUnlocked){promptFredPassword();return;}
       selectedPlayer=p;
       renderPlayerPicker();
-      // Show the right action panel
       if(p.id==='fred'){
         el('homeActionsFred').style.display='block';
         el('homeActionsPlayer').style.display='none';
