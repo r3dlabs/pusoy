@@ -248,6 +248,23 @@
     .small-text{font-size:12px;color:var(--muted);line-height:1.55;}
     .note{background:var(--gold-bg);border:1px solid var(--gold-br);color:var(--gold);border-radius:var(--r);padding:10px 12px;margin-top:10px;font-size:12px;line-height:1.5;}
     .slabel-inner{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+
+    /* ── TOAST ── */
+    #toast-container{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;}
+    .toast{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:10px 18px;border-radius:var(--r);background:var(--surface);border:1px solid var(--border);color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,0.4);opacity:0;transform:translateY(10px);transition:opacity .2s,transform .2s;pointer-events:auto;white-space:nowrap;max-width:90vw;}
+    .toast.show{opacity:1;transform:translateY(0);}
+    .toast.toast-error{border-color:var(--bad-br);background:var(--bad-bg);color:var(--bad);}
+    .toast.toast-success{border-color:var(--win-br);background:var(--win-bg);color:var(--win);}
+    .toast.toast-warn{border-color:var(--gold-br);background:var(--gold-bg);color:var(--gold);}
+
+    /* ── DIALOG (alert / confirm) ── */
+    #dialog-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;padding:20px;z-index:9998;backdrop-filter:blur(4px);}
+    #dialog-overlay.active{display:flex;}
+    #dialog-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;width:min(400px,100%);box-shadow:0 24px 80px rgba(0,0,0,0.5);}
+    #dialog-icon{font-size:28px;margin-bottom:10px;}
+    #dialog-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:var(--text);margin-bottom:6px;}
+    #dialog-msg{font-size:14px;color:var(--muted);line-height:1.55;margin-bottom:20px;white-space:pre-line;}
+    #dialog-btns{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
   </style>
 </head>
 <body>
@@ -453,6 +470,19 @@
     </div>
   </div>
 
+  <!-- TOAST -->
+  <div id="toast-container"></div>
+
+  <!-- DIALOG -->
+  <div id="dialog-overlay">
+    <div id="dialog-box">
+      <div id="dialog-icon"></div>
+      <div id="dialog-title"></div>
+      <div id="dialog-msg"></div>
+      <div id="dialog-btns"></div>
+    </div>
+  </div>
+
   <script>
     // theme
     const themeBtn=document.getElementById('themeBtn'),themeIcon=document.getElementById('themeIcon'),themeLabel=document.getElementById('themeLabel');
@@ -460,6 +490,74 @@
     function applyTheme(d){document.documentElement.setAttribute('data-theme',d?'dark':'light');themeIcon.textContent=d?'☀️':'🌙';themeLabel.textContent=d?'Light':'Dark';}
     applyTheme(isDark);
     themeBtn.addEventListener('click',()=>{isDark=!isDark;applyTheme(isDark);});
+
+    // ── TOAST ──────────────────────────────────────────────────────────────
+    function toast(msg, type='', duration=3000){
+      const c=document.getElementById('toast-container');
+      const t=document.createElement('div');
+      t.className='toast'+(type?' toast-'+type:'');
+      t.textContent=msg;
+      c.appendChild(t);
+      requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('show')));
+      setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),250);},duration);
+    }
+
+    // ── DIALOG (alert / confirm) ────────────────────────────────────────────
+    // showAlert(msg, {title, icon, type}) → Promise<void>
+    // showConfirm(msg, {title, icon, confirmLabel, cancelLabel}) → Promise<bool>
+    const dialogOverlay=document.getElementById('dialog-overlay');
+    const dialogIcon=document.getElementById('dialog-icon');
+    const dialogTitle=document.getElementById('dialog-title');
+    const dialogMsg=document.getElementById('dialog-msg');
+    const dialogBtns=document.getElementById('dialog-btns');
+
+    function _showDialog({icon='', title='', msg='', buttons=[]}){
+      return new Promise(resolve=>{
+        dialogIcon.textContent=icon;
+        dialogIcon.style.display=icon?'block':'none';
+        dialogTitle.textContent=title;
+        dialogTitle.style.display=title?'block':'none';
+        dialogMsg.textContent=msg;
+        dialogBtns.innerHTML='';
+        buttons.forEach(b=>{
+          const btn=document.createElement('button');
+          btn.className='btn '+(b.cls||'btn-ghost');
+          btn.textContent=b.label;
+          btn.addEventListener('click',()=>{
+            dialogOverlay.classList.remove('active');
+            resolve(b.value);
+          });
+          dialogBtns.appendChild(btn);
+        });
+        dialogOverlay.classList.add('active');
+      });
+    }
+
+    function showAlert(msg, opts={}){
+      const {title='', icon='', type=''} = opts;
+      // Map type to icon if none given
+      const ic = icon || (type==='error'?'✕':type==='success'?'✓':type==='warn'?'⚠':'ℹ');
+      return _showDialog({
+        icon: ic, title, msg,
+        buttons:[{label:'OK', cls:'btn-primary', value:true}]
+      });
+    }
+
+    function showConfirm(msg, opts={}){
+      const {title='Confirm', icon='⚠', confirmLabel='Confirm', cancelLabel='Cancel', confirmCls='btn-primary'} = opts;
+      return _showDialog({
+        icon, title, msg,
+        buttons:[
+          {label:cancelLabel, cls:'btn-ghost', value:false},
+          {label:confirmLabel, cls:confirmCls, value:true}
+        ]
+      });
+    }
+
+    // Close dialog on overlay click
+    dialogOverlay.addEventListener('click', e=>{
+      if(e.target===dialogOverlay) dialogOverlay.classList.remove('active');
+    });
 
     // game
     const SUPABASE_URL="https://kappyxsapcrldmfpswbx.supabase.co";
@@ -511,11 +609,11 @@
 
     restoreSession();
 
-    async function callRpc(fn,args){const{data,error}=await sb.rpc(fn,args);if(error){console.error(error);alert(error.message||"Supabase error");throw error;}return data;}
+    async function callRpc(fn,args){const{data,error}=await sb.rpc(fn,args);if(error){console.error(error);await showAlert(error.message||"Supabase error",{title:'Error',type:'error'});throw error;}return data;}
 
     async function createRoom(){const name=requirePlayerName();if(!name)return;const data=await callRpc("create_pusoy_room",{p_name:name});me={roomCode:data.room_code,seat:data.seat,token:data.player_token,name};saveSession();await refreshState();subscribeToRoom();startBackgroundRefresh();goRoom();}
 
-    async function joinRoom(){const name=requirePlayerName();if(!name)return;const code=el("roomCodeInput").value.trim();const seat=el("seatSelect").value;if(!code){alert("Enter a room code first.");return;}const data=await callRpc("join_pusoy_room",{p_room_code:code,p_name:name,p_seat:seat});me={roomCode:data.room_code,seat:data.seat,token:data.player_token,name};saveSession();await refreshState();subscribeToRoom();startBackgroundRefresh();goRoom();}
+    async function joinRoom(){const name=requirePlayerName();if(!name)return;const code=el("roomCodeInput").value.trim();const seat=el("seatSelect").value;if(!code){await showAlert("Enter a room code first.",{title:'Room Code Required',type:'warn'});return;}const data=await callRpc("join_pusoy_room",{p_room_code:code,p_name:name,p_seat:seat});me={roomCode:data.room_code,seat:data.seat,token:data.player_token,name};saveSession();await refreshState();subscribeToRoom();startBackgroundRefresh();goRoom();}
 
     async function refreshState(){if(!me)return;state=await callRpc("get_pusoy_my_state",{p_room_code:me.roomCode,p_player_token:me.token});renderRoom();}
 
@@ -525,15 +623,15 @@
 
     async function leaveRoom(){if(roomChannel){await sb.removeChannel(roomChannel);roomChannel=null;}stopBackgroundRefresh();localStorage.removeItem("pusoy_online_session");screens.room.classList.remove("active");screens.home.classList.add("active");el("headerRoomBar").classList.remove("active");state=null;me=null;el("headerNewDealBtn").style.display="none";el("headerBackLobbyBtn").style.display="none";el("headerResetDbBtn").style.display="none";}
 
-    function copyCode(){navigator.clipboard?.writeText(me.roomCode);el("roomMessage").textContent="Room code copied: "+me.roomCode;}
+    function copyCode(){navigator.clipboard?.writeText(me.roomCode);toast('Room code copied: '+me.roomCode,'success');}
 
     function updateHeaderControls(){const nd=el("headerNewDealBtn"),bl=el("headerBackLobbyBtn"),rd=el("headerResetDbBtn");if(!state||!me||me.seat!=="banker"){nd.style.display="none";bl.style.display="none";rd.style.display="none";return;}const canNew=["lobby","waiting","showdown"].includes(state.status);nd.style.display=canNew?"":"none";nd.textContent=state.status==="lobby"?"Start Deal":"New Deal";bl.style.display=state.status!=="lobby"?"":"none";rd.style.display="";}
 
-    async function headerNewDeal(){if(!state||!me||me.seat!=="banker")return;if(state.status==="arranging"){alert("A round is already in progress.");return;}if(getJoinedSeats().length<2){alert("At least banker and one player should join.");return;}await startRound();}
+    async function headerNewDeal(){if(!state||!me||me.seat!=="banker")return;if(state.status==="arranging"){await showAlert("A round is already in progress.",{title:'In Progress',type:'warn'});return;}if(getJoinedSeats().length<2){await showAlert("At least banker and one player must join first.",{title:'Not Enough Players',type:'warn'});return;}await startRound();}
 
-    async function headerBackToLobby(){if(!state||!me||me.seat!=="banker")return;if(!confirm("Reset back to lobby?"))return;closeModal("arrangeModal");closeModal("showdownModal");await callRpc("reset_pusoy_lobby",{p_room_code:me.roomCode,p_player_token:me.token});await refreshState();}
+    async function headerBackToLobby(){if(!state||!me||me.seat!=="banker")return;const ok=await showConfirm("Reset back to lobby and clear current cards?",{title:'Reset to Lobby',icon:'⚠',confirmLabel:'Reset',confirmCls:'btn-bad'});if(!ok)return;closeModal("arrangeModal");closeModal("showdownModal");await callRpc("reset_pusoy_lobby",{p_room_code:me.roomCode,p_player_token:me.token});await refreshState();}
 
-    async function headerResetDb(){if(!state||!me||me.seat!=="banker")return;if(!confirm("Reset this room DB? Clears player seats and all cards."))return;closeModal("arrangeModal");closeModal("showdownModal");await callRpc("clear_pusoy_room_seats",{p_room_code:me.roomCode,p_player_token:me.token});selectedCardId=null;await refreshState();alert("Room reset.");}
+    async function headerResetDb(){if(!state||!me||me.seat!=="banker")return;const ok=await showConfirm("Clear all player seats and cards? The banker stays. This cannot be undone.",{title:'Reset Room DB',icon:'⚠',confirmLabel:'Reset DB',confirmCls:'btn-bad'});if(!ok)return;closeModal("arrangeModal");closeModal("showdownModal");await callRpc("clear_pusoy_room_seats",{p_room_code:me.roomCode,p_player_token:me.token});selectedCardId=null;await refreshState();toast('Room reset — player seats cleared.','success');}
 
     function capId(s){return s.charAt(0).toUpperCase()+s.slice(1);}
 
@@ -632,20 +730,20 @@
     async function handleSeatClick(seat){
       if(!state||!me)return;
       if(seat==="scoring"){await handleScoringClick();return;}
-      if(!state.players?.[seat]){alert("This seat is empty.");return;}
+      if(!state.players?.[seat]){toast("This seat is empty.",'warn');return;}
       if(seat===me.seat){
-        if(state.status==="lobby"){alert("Wait for the banker to start.");return;}
+        if(state.status==="lobby"){toast("Wait for the banker to start.",'warn');return;}
         if(state.status==="arranging"||state.status==="showdown")return;
-        if(state.status==="waiting"){alert("Hand submitted. Waiting for showdown.");return;}
+        if(state.status==="waiting"){toast("Hand submitted — waiting for showdown.",'warn');return;}
       }
       if(state.status==="showdown")return;
-      alert("Hidden until showdown.");
+      toast("Cards are hidden until showdown.",'warn');
     }
 
     async function handleScoringClick(){
-      if(state.status==="lobby"){if(me.seat!=="banker"){alert("Only banker can start.");return;}if(getJoinedSeats().length<2){alert("Need at least 2 players.");return;}await startRound();return;}
-      if(state.status==="arranging"){const j=getJoinedSeats(),s=j.filter(x=>state.players?.[x]?.submitted);alert(`Waiting: ${s.length}/${j.length} submitted`);return;}
-      if(state.status==="waiting"){if(me.seat!=="banker"){alert("Waiting for banker.");return;}await revealShowdown();return;}
+      if(state.status==="lobby"){if(me.seat!=="banker"){toast("Only the banker can start.",'warn');return;}if(getJoinedSeats().length<2){toast("Need at least 2 players.",'warn');return;}await startRound();return;}
+      if(state.status==="arranging"){const j=getJoinedSeats(),s=j.filter(x=>state.players?.[x]?.submitted);toast(`Submitted: ${s.length}/${j.length}`,'warn');return;}
+      if(state.status==="waiting"){if(me.seat!=="banker"){toast("Waiting for banker to reveal.",'warn');return;}await revealShowdown();return;}
       if(state.status==="showdown")openShowdown();
     }
 
@@ -661,7 +759,7 @@
       for(const area of areas){const idx=hand[area].findIndex(c=>c.id===cardId);if(idx>=0){card=hand[area].splice(idx,1)[0];break;}}
       if(!card)return;
       const limits={top:3,middle:5,bottom:5,pool:13};
-      if(hand[targetZone].length>=(limits[targetZone]??13)){hand.pool.push(card);alert("That row is full.");}
+      if(hand[targetZone].length>=(limits[targetZone]??13)){hand.pool.push(card);toast("That row is full.",'warn');}
       else hand[targetZone].push(card);
       setMyHandForArrange(hand);selectedCardId=null;renderRoom();
     }
@@ -669,14 +767,14 @@
     function autoArrangeMySeat(){const c=getMyHandForArrange();setMyHandForArrange(autoArrange([...c.pool,...c.top,...c.middle,...c.bottom]));selectedCardId=null;renderRoom();}
     function clearMyLayout(){const h=getMyHandForArrange();h.pool=[...h.pool,...h.top,...h.middle,...h.bottom];h.top=[];h.middle=[];h.bottom=[];setMyHandForArrange(h);selectedCardId=null;renderRoom();}
 
-    async function submitHand(){const hand=getMyHandForArrange(),valid=validateHand(hand);if(!valid.ok){alert("Cannot submit: "+valid.reason);return;}await callRpc("submit_pusoy_hand",{p_room_code:me.roomCode,p_player_token:me.token,p_top:hand.top,p_middle:hand.middle,p_bottom:hand.bottom});closeModal("arrangeModal");await refreshState();}
+    async function submitHand(){const hand=getMyHandForArrange(),valid=validateHand(hand);if(!valid.ok){await showAlert(valid.reason,{title:'Cannot Submit',type:'error'});return;}await callRpc("submit_pusoy_hand",{p_room_code:me.roomCode,p_player_token:me.token,p_top:hand.top,p_middle:hand.middle,p_bottom:hand.bottom});closeModal("arrangeModal");await refreshState();}
 
     function startBackgroundRefresh(){stopBackgroundRefresh();pollInterval=setInterval(async()=>{if(!me)return;try{await refreshState();}catch(e){console.warn(e);}},POLL_MS);timerInterval=setInterval(()=>maybeAutoSubmitOnTimeout(),1000);}
     function stopBackgroundRefresh(){if(pollInterval)clearInterval(pollInterval);if(timerInterval)clearInterval(timerInterval);pollInterval=null;timerInterval=null;timeoutSubmitting=false;}
 
     function getArrangeSecondsRemaining(){if(!state||state.status!=="arranging")return null;const started=state.arrangement_started_at||state.updated_at;if(!started)return null;return Math.max(0,Math.ceil((new Date(started).getTime()+ARRANGE_SECONDS*1000-Date.now())/1000));}
 
-    async function maybeAutoSubmitOnTimeout(){if(!state||!me||state.status!=="arranging"||state.my_submitted||timeoutSubmitting)return;const s=getArrangeSecondsRemaining();if(s===null||s>0)return;timeoutSubmitting=true;try{let hand=getMyHandForArrange();if(!validateHand(hand).ok){hand=autoArrange([...hand.pool,...hand.top,...hand.middle,...hand.bottom]);setMyHandForArrange(hand);}await callRpc("submit_pusoy_hand",{p_room_code:me.roomCode,p_player_token:me.token,p_top:hand.top,p_middle:hand.middle,p_bottom:hand.bottom});closeModal("arrangeModal");await refreshState();el("roomMessage").innerHTML="<strong>Time up.</strong> Hand auto-submitted.";}catch(e){console.warn(e);}finally{timeoutSubmitting=false;}}
+    async function maybeAutoSubmitOnTimeout(){if(!state||!me||state.status!=="arranging"||state.my_submitted||timeoutSubmitting)return;const s=getArrangeSecondsRemaining();if(s===null||s>0)return;timeoutSubmitting=true;try{let hand=getMyHandForArrange();if(!validateHand(hand).ok){hand=autoArrange([...hand.pool,...hand.top,...hand.middle,...hand.bottom]);setMyHandForArrange(hand);}await callRpc("submit_pusoy_hand",{p_room_code:me.roomCode,p_player_token:me.token,p_top:hand.top,p_middle:hand.middle,p_bottom:hand.bottom});closeModal("arrangeModal");await refreshState();toast("Time up — hand auto-submitted.",'warn');}catch(e){console.warn(e);}finally{timeoutSubmitting=false;}}
 
     function hasLargeSeatView(seat){if(!state)return false;if(state.status==="showdown"&&!!state.showdown_hands?.[seat])return true;if((state.status==="arranging"||state.status==="waiting")&&!!state.players?.[seat])return true;return false;}
 
@@ -707,7 +805,7 @@
     }
 
     function openShowdown(){
-      if(state.status!=="showdown"||!state.showdown_hands){alert("Showdown not ready.");return;}
+      if(state.status!=="showdown"||!state.showdown_hands){toast("Showdown not ready yet.",'warn');return;}
       const html=[];
       html.push(`<div class="result-list">`);
       seatOrder.forEach(seat=>{const info=state.showdown_hands[seat];if(!info)return;const hand=fromShowdownHand(info);html.push(`<div class="reveal-hand"><h3>${seatNames[seat]}</h3>${renderHandLine("Top",hand.top,evaluate3(hand.top).name)}${renderHandLine("Middle",hand.middle,evaluate5(hand.middle).name)}${renderHandLine("Bottom",hand.bottom,evaluate5(hand.bottom).name)}</div>`);});
@@ -728,7 +826,7 @@
     function openModal(id){el(id).classList.add("active");}
     function closeModal(id){el(id).classList.remove("active");}
 
-    function requirePlayerName(){const input=el("nameInput"),name=input.value.trim().slice(0,24);if(!name){alert("Please enter your name first.");input.focus();input.style.borderColor="var(--accent)";setTimeout(()=>input.style.borderColor="",2000);return null;}return name;}
+    function requirePlayerName(){const input=el("nameInput"),name=input.value.trim().slice(0,24);if(!name){toast("Please enter your name first.",'error');input.focus();input.style.borderColor="var(--accent)";setTimeout(()=>input.style.borderColor="",2000);return null;}return name;}
 
     function makeDeck(){const deck=[];for(const suit of suits)for(const rank of ranks)deck.push({id:`${rank}${suit}-${Math.random().toString(36).slice(2,9)}`,rank,suit,value:rankValue[rank]});return deck;}
     function shuffle(arr){const copy=[...arr];for(let i=copy.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]];}return copy;}
