@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -464,7 +464,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // ----------------------------------------------------------
 // THEME
 // ----------------------------------------------------------
-let isDark=true;
+let isDark=false;
 const themeBtn=document.getElementById('themeBtn');
 function applyTheme(d){document.documentElement.setAttribute('data-theme',d?'dark':'light');document.getElementById('themeIco').textContent=d?'☀️':'🌙';document.getElementById('themeLbl').textContent=d?'Light':'Dark';}
 applyTheme(isDark);
@@ -880,6 +880,8 @@ function setHand(hand){
 
 function renderArrange(){
   const hand=getHand();
+  const isFred=me?.playerId==='fred';
+  el('btnAutoArrange').style.display=isFred?'':'none';
   const pid=me.playerId||playerIdFromName(me.name)||'';
   el('arrangePlayerName').innerHTML=`<span style="display:inline-flex;align-items:center;gap:10px;">
     <img src="${avatarUrl(pid)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'"/>
