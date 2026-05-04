@@ -41,30 +41,36 @@
     .float-bl{bottom:20px;left:16px;flex-direction:row;}
 
     .float-btn{
-      display:flex;align-items:center;justify-content:center;
-      width:40px;height:40px;border-radius:10px;
+      display:inline-flex;align-items:center;gap:6px;
+      height:34px;padding:0 12px;border-radius:999px;
       border:1px solid rgba(255,255,255,0.18);
       background:rgba(0,0,0,0.32);
       color:rgba(255,255,255,0.85);
-      cursor:pointer;font-size:16px;
+      cursor:pointer;font-size:14px;
       backdrop-filter:blur(8px);
       transition:background .15s,border-color .15s,transform .1s;
-      flex-shrink:0;
+      flex-shrink:0;white-space:nowrap;
     }
-    .float-btn:hover{background:rgba(0,0,0,0.5);border-color:rgba(255,255,255,0.35);transform:scale(1.06);}
+    .float-btn .flbl{
+      font-family:'Barlow Condensed',sans-serif;
+      font-size:11px;font-weight:700;
+      letter-spacing:.08em;text-transform:uppercase;
+      line-height:1;
+    }
+    .float-btn:hover{background:rgba(0,0,0,0.5);border-color:rgba(255,255,255,0.35);transform:scale(1.04);}
     .float-btn.f-red{border-color:rgba(239,68,68,0.4);color:#f87171;}
     .float-btn.f-red:hover{background:rgba(239,68,68,0.2);}
     .float-btn.f-green{border-color:rgba(74,222,128,0.4);color:#4ade80;}
     .float-btn.f-green:hover{background:rgba(74,222,128,0.15);}
-    /* on light bg screens, darken float buttons */
+    /* on light bg screens */
     body:not(.on-felt) .float-btn{
-      background:rgba(0,0,0,0.07);
+      background:rgba(0,0,0,0.06);
       border-color:rgba(0,0,0,0.12);
       color:var(--text);
     }
-    body:not(.on-felt) .float-btn:hover{background:rgba(0,0,0,0.14);}
-    body:not(.on-felt) .float-btn.f-red{color:var(--bad);}
-    body:not(.on-felt) .float-btn.f-green{color:var(--win);}
+    body:not(.on-felt) .float-btn:hover{background:rgba(0,0,0,0.13);}
+    body:not(.on-felt) .float-btn.f-red{color:var(--bad);border-color:var(--bad-br);}
+    body:not(.on-felt) .float-btn.f-green{color:var(--win);border-color:var(--win-br);}
 
     .float-label{
       font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;
@@ -541,15 +547,13 @@
 
 <!-- FLOATING UI — always on top -->
 <div class="float-tr" id="floatTR">
-  <!-- Fred banker controls (shown when in room) -->
-  <button class="float-btn f-green" id="btnNewDeal" style="display:none" title="New Deal">⚡</button>
-  <button class="float-btn" id="btnResetLobby" style="display:none" title="Reset Lobby">↺</button>
-  <button class="float-btn f-red" id="btnResetDb" style="display:none" title="Reset DB">⚠</button>
-  <!-- always visible -->
-  <button class="float-btn" id="btnCopyCode" style="display:none" title="Copy Room Code">⧉</button>
-  <button class="float-btn" id="btnLeave" style="display:none" title="Leave">✕</button>
-  <button class="float-btn" id="btnFullscreen" title="Fullscreen">⛶</button>
-  <button class="float-btn" id="themeBtn" title="Toggle theme"><span id="themeIco">☀</span></button>
+  <button class="float-btn f-green" id="btnNewDeal" style="display:none">⚡ <span class="flbl">Deal</span></button>
+  <button class="float-btn" id="btnResetLobby" style="display:none">↺ <span class="flbl">Reset</span></button>
+  <button class="float-btn f-red" id="btnResetDb" style="display:none">⚠ <span class="flbl">Reset DB</span></button>
+  <button class="float-btn" id="btnCopyCode" style="display:none">⧉ <span class="flbl">Copy Code</span></button>
+  <button class="float-btn" id="btnLeave" style="display:none">✕ <span class="flbl">Leave</span></button>
+  <button class="float-btn" id="btnFullscreen">⛶ <span class="flbl">Fullscreen</span></button>
+  <button class="float-btn" id="themeBtn"><span id="themeIco">☀</span> <span class="flbl" id="themeLbl">Light</span></button>
 </div>
 
 <!-- ══ HOME ══ -->
@@ -693,7 +697,11 @@ const el=id=>document.getElementById(id);
 // ----------------------------------------------------------
 let isDark=false;
 const themeBtn=document.getElementById('themeBtn');
-function applyTheme(d){document.documentElement.setAttribute('data-theme',d?'dark':'light');document.getElementById('themeIco').textContent=d?'🌙':'☀';}
+function applyTheme(d){
+  document.documentElement.setAttribute('data-theme',d?'dark':'light');
+  document.getElementById('themeIco').textContent=d?'🌙':'☀';
+  document.getElementById('themeLbl').textContent=d?'Dark':'Light';
+}
 applyTheme(isDark);
 themeBtn.addEventListener('click',()=>{isDark=!isDark;applyTheme(isDark);});
 
@@ -819,7 +827,8 @@ function updateHeaderBtns(){
   const isFred=me?.playerId==='fred';
   const st=state?.status;
   el('btnNewDeal').style.display=(isFred&&['lobby','waiting','showdown'].includes(st))?'':'none';
-  el('btnNewDeal').title=st==='lobby'?'Start Deal':'New Deal';
+  const dealLbl=el('btnNewDeal').querySelector('.flbl');
+  if(dealLbl)dealLbl.textContent=st==='lobby'?'Start Deal':'New Deal';
   el('btnResetLobby').style.display=(isFred&&st!=='lobby')?'':'none';
   el('btnResetDb').style.display=isFred?'':'none';
 }
